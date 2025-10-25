@@ -23,7 +23,7 @@ function ServicesPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/services/images`);
       const data = await response.json();
-      
+
       if (data.tattoos) setTattooDesigns(data.tattoos);
       if (data.haircuts) setHaircutStyles(data.haircuts);
     } catch (error) {

@@ -566,27 +566,42 @@ def toggle_feedback_resolved(feedback_id):
 # =========================================
 # SERVICES
 # =========================================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+REACT_PUBLIC_PATH = os.path.join(BASE_DIR, "../marmu-react/public/assets")
+
+# ✅ Serve static images directly
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    return send_from_directory(REACT_PUBLIC_PATH, filename)
+
+# ✅ Return list of tattoo + haircut images
 @app.route("/api/services/images", methods=["GET"])
 def get_service_images():
-    tattoo_folder = "../website/assets/tattoos"
-    haircut_folder = "../website/assets/haircuts"
+    tattoo_folder = os.path.join(REACT_PUBLIC_PATH, "tattoo_images")
+    haircut_folder = os.path.join(REACT_PUBLIC_PATH, "haircut_images")
 
     def get_images(folder, service_type):
-        images, valid_exts = [], ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp"]
+        images = []
         if not os.path.exists(folder):
             return []
-        for ext in valid_exts:
-            for path in glob.glob(os.path.join(folder, ext)):
-                filename = os.path.basename(path)
+        for filename in os.listdir(folder):
+            if filename.lower().endswith(".png"):  # ✅ Only .png files
                 name = os.path.splitext(filename)[0].replace("_", " ").replace("-", " ").title()
-                images.append({"name": name, "image": f"assets/{service_type}/{filename}"})
+                image_url = f"http://localhost:5000/assets/{service_type}_images/{filename}"
+                images.append({"name": name, "image": image_url})
         return sorted(images, key=lambda x: x["name"])
 
-    tattoos = get_images(tattoo_folder, "tattoos")
-    haircuts = get_images(haircut_folder, "haircuts")
+    tattoos = get_images(tattoo_folder, "tattoo")
+    haircuts = get_images(haircut_folder, "haircut")
 
-    return jsonify({"tattoos": tattoos, "haircuts": haircuts, "total": len(tattoos) + len(haircuts)}), 200
+    return jsonify({
+        "tattoos": tattoos,
+        "haircuts": haircuts,
+        "total": len(tattoos) + len(haircuts)
+    }), 200
 
+if __name__ == "__main__":
+    app.run(debug=True)
 # =========================================
 # MAIN ENTRY
 # =========================================
