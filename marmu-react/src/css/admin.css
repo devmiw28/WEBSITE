@@ -1,0 +1,314 @@
+/* 🌙 DARK MODE BASE */
+body.dark-mode {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background-color: #212121;
+  color: white;
+}
+
+.admin-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* 🧭 SIDEBAR */
+.sidebar {
+  width: 220px;
+  background: #333;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  text-align: center;
+  color: #00aaff;
+  margin-bottom: 20px;
+}
+
+.menu-btn {
+  background: #424242;
+  color: white;
+  border: none;
+  padding: 12px;
+  margin: 5px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 15px;
+  transition: background 0.3s;
+}
+.menu-btn:hover {
+  background: #5a5a5a;
+}
+
+.logout-btn {
+  margin-top: auto;
+  background: #dc3545;
+  border: none;
+  color: white;
+  font-weight: bold;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.logout-btn:hover {
+  background: #b52a37;
+}
+
+/* 🖥️ CONTENT AREA */
+.content {
+  flex-grow: 1;
+  padding: 25px;
+  overflow-y: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #2c2c2c;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.table th,
+.table td {
+  padding: 12px 15px;
+  text-align: center;
+  border-bottom: 1px solid #444;
+}
+
+.table th {
+  background: #444;
+  color: #fff;
+}
+
+.status {
+  font-weight: bold;
+}
+.status.approved {
+  color: #28a745;
+}
+.status.denied {
+  color: #f44336;
+}
+.status.pending {
+  color: #ffc107;
+}
+
+/* ⚙️ BUTTONS INSIDE TABLES */
+.action-btn {
+  border: none;
+  padding: 8px 12px;
+  margin: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+.approve {
+  background: #007acc;
+  color: white;
+}
+.approve:hover {
+  background: #005fa3;
+}
+.deny {
+  background: #f44336;
+  color: white;
+}
+.deny:hover {
+  background: #d32f2f;
+}
+.reply {
+  background: #28a745;
+  color: white;
+}
+.reply:hover {
+  background: #1e7e34;
+}
+.resolve {
+  background: #ffc107;
+  color: black;
+}
+.resolve:hover {
+  background: #e0a800;
+}
+
+/* 💬 MODAL BASE (USED FOR ADD USER MODAL) */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+/* 📦 MODAL CONTENT */
+.modal-content {
+  background: #2c2c2c; /* Match table dark theme */
+  color: white;
+  padding: 25px 30px;
+  border-radius: 12px;
+  width: 480px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.3s ease;
+  font-family: "Poppins", sans-serif;
+  position: relative;
+}
+
+.modal-content h3,
+.modal-content h2 {
+  margin-bottom: 15px;
+  color: #00aaff;
+  text-align: center;
+}
+
+/* ✏️ INPUTS / TEXTAREA */
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  background: #3b3b3b;
+  border: 1px solid #555;
+  color: white;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: "Poppins", sans-serif;
+}
+
+.modal-content textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.modal-content input:focus,
+.modal-content select:focus,
+.modal-content textarea:focus {
+  border-color: #00aaff;
+}
+
+/* ❌ CLOSE BUTTON */
+.close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s;
+}
+.close:hover {
+  color: #fff;
+}
+
+/* 💾 SAVE / ACTION BUTTONS */
+.save-btn,
+.btn-primary {
+  background-color: #007acc;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.save-btn:hover,
+.btn-primary:hover {
+  background-color: #005fa3;
+}
+
+.btn-secondary {
+  background-color: #555;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.btn-secondary:hover {
+  background-color: #777;
+}
+
+/* ⭐ STARS */
+.stars {
+  color: gold;
+  font-size: 1.2em;
+}
+
+/* 💡 NO EMAIL NOTE */
+.no-email {
+  color: #ff5252;
+  font-size: 0.85em;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+
+/* 🧾 FEEDBACK INFO BOX */
+.feedback-info {
+  background: #3a3a3a;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+.feedback-info strong {
+  color: #00aaff;
+}
+.user-message {
+  margin-top: 5px;
+  white-space: pre-wrap;
+  color: #e0e0e0;
+}
+
+/* ⚙️ BUTTON GROUP */
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* 💬 FIX FOR REPLY MODAL (CENTERED) */
+.modal-overlay {
+  display: none; /* Hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Above everything else */
+}
+
+.modal-overlay .modal-content {
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ✨ ANIMATION */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

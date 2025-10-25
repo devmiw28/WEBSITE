@@ -1,0 +1,182 @@
+/* General Page Styles */
+.dark-mode {
+  background-color: #1a1a1a; /* Dark background from image */
+  color: #e0e0e0; /* Off-white text */
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+/* Tab Navigation */
+.tab-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+  padding-top: 20px;
+  border-bottom: 1px solid #333;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  color: #a0a0a0; /* Muted color for inactive tabs */
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px; /* Aligns with the container's border */
+}
+
+.tab-btn:hover {
+  color: #ffffff;
+}
+
+.tab-btn.active {
+  color: #ae8f6f; /* Gold/tan accent color from image */
+  border-bottom: 3px solid #ae8f6f;
+}
+
+/* Gallery Section */
+.gallery-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* This overrides the inline styles in your JSX for a consistent look */
+.gallery-container h2 {
+  text-align: center;
+  color: #ae8f6f !important; /* Use important to override inline style */
+  margin-bottom: 30px !important;
+  font-family: 'Georgia', serif; /* Serif font like the image */
+  font-size: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.gallery-grid {
+  display: grid;
+  /* Creates a responsive grid that fits as many 300px cards as possible */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Gallery Card Styling */
+.gallery-card {
+  background-color: #252525;
+  border: 1px solid #333;
+  text-align: center;
+  overflow: hidden; /* Ensures image zoom doesn't break layout */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gallery-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.gallery-card img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover; /* Prevents images from stretching */
+  display: block;
+  filter: grayscale(100%); /* Matches the B&W feel of the image */
+  transition: all 0.4s ease;
+}
+
+.gallery-card:hover img {
+  filter: grayscale(0%); /* Brings color back on hover */
+  transform: scale(1.05); /* Slight zoom effect */
+}
+
+.gallery-card h3 {
+  padding: 20px 15px;
+  margin: 0;
+  color: #ae8f6f;
+  font-family: 'Georgia', serif;
+  text-transform: uppercase;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+}
+
+/* Price List Section (See JSX update below) */
+.price-list-container {
+  text-align: center;
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 40px;
+  background-color: #222;
+  border: 1px solid #333;
+}
+
+.price-list-container h2 {
+  color: #ae8f6f;
+  font-family: 'Georgia', serif;
+  text-transform: uppercase;
+  font-size: 1.8rem;
+  margin-bottom: 30px;
+}
+
+.price-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.price-list-item {
+  font-size: 1.2rem;
+  color: #e0e0e0;
+  margin: 15px 0;
+  font-family: 'Georgia', serif;
+  letter-spacing: 1px;
+}
+
+.price-list-item span {
+  color: #ae8f6f; /* Accent color for the currency */
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+/* Book Now Button Section */
+.book-now-section {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #111; /* Slightly different footer background */
+  margin-top: 50px;
+}
+
+.book-now-btn {
+  background-color: #ae8f6f;
+  color: #1a1a1a; /* Dark text on light button */
+  border: none;
+  padding: 15px 40px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+}
+
+.book-now-btn:hover {
+  background-color: #c5a47e; /* Lighter gold on hover */
+  box-shadow: 0 4px 15px rgba(174, 143, 111, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Utility & Loading States */
+.hidden {
+  display: none;
+}
+
+.loading,
+.no-items {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #888;
+  padding: 60px 20px;
+  font-style: italic;
+}
