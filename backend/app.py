@@ -39,43 +39,154 @@ def hash_password(password):
 def is_valid_email(email):
     return re.match(r'^[a-zA-Z0-9._%+-]+@gmail\.com$', email)
 
+# =====================================================
+# ✉️ Send OTP Email (Styled)
+# =====================================================
 def send_email_otp(email, subject, otp):
     html_body = f"""
-    <html><body>
-    <h2>MARMU Barber & Tattoo Shop</h2>
-    <p>Your OTP code is:</p>
-    <h1>{otp}</h1>
-    <p>This code will expire in {OTP_EXPIRY_MINUTES} minutes.</p>
-    </body></html>
+    <html>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+        <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <h2 style="color: #0078d7; text-align: center;">Marmu Barber & Tattoo Shop</h2>
+            <p style="font-size: 16px; color: #333;">Hi there,</p>
+            <p style="font-size: 16px; color: #333;">Use the following One-Time Password (OTP) to reset your password:</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <span style="font-size: 32px; font-weight: bold; color: #ffffff; background-color: #0078d7; padding: 15px 25px; border-radius: 4px; letter-spacing: 5px;">
+                    {otp}
+                </span>
+            </div>
+
+            <p style="font-size: 14px; color: #777;">
+                This code is valid for <strong>{OTP_EXPIRY_MINUTES} minutes</strong>. Please do not share this code with anyone.
+            </p>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="font-size: 12px; color: #999; text-align: center;">Thank you for choosing Marmu Barber & Tattoo Shop.</p>
+        </div>
+    </body>
+    </html>
     """
+
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = YOUR_GMAIL
     msg["To"] = email
     msg.attach(MIMEText(html_body, "html"))
 
-    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-        server.starttls()
-        server.login(YOUR_GMAIL, YOUR_APP_PASSWORD)
-        server.send_message(msg)
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(YOUR_GMAIL, YOUR_APP_PASSWORD)
+            server.send_message(msg)
+        print(f"✅ OTP email sent successfully to {email}")
+    except Exception as e:
+        print(f"❌ Failed to send OTP email: {e}")
 
+
+# =====================================================
+# 💬 Send Feedback Reply Email (Styled)
+# =====================================================
 def send_feedback_reply_email(to_email, username, reply):
-    subject = "Reply to Your Feedback"
-    body = f"Hi {username},\n\nThank you for your feedback.\n\nOur reply:\n{reply}\n\nBest regards,\nThe Team"
-    
-    msg = MIMEText(body)
+    subject = "Reply to Your Feedback - Marmu Barber & Tattoo Shop"
+
+    html_body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+        <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <h2 style="color: #0078d7; text-align: center;">Marmu Barber & Tattoo Shop</h2>
+            <p style="font-size: 16px; color: #333;">Hi {username},</p>
+            <p style="font-size: 16px; color: #333;">Thank you for your feedback! We truly appreciate your time and support.</p>
+            
+            <div style="background-color: #f8f9fa; padding: 15px 20px; border-left: 4px solid #0078d7; margin: 25px 0; border-radius: 5px;">
+                <p style="font-size: 15px; color: #333; margin: 0;">
+                    <strong>Our Reply:</strong><br>
+                    {reply}
+                </p>
+            </div>
+
+            <p style="font-size: 15px; color: #333;">
+                We hope to see you again soon at <strong>Marmu Barber & Tattoo Shop</strong>!
+            </p>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="font-size: 12px; color: #999; text-align: center;">
+                &copy; 2025 Marmu Barber & Tattoo Shop. All rights reserved.
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+
+    msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"] = "your_email@example.com"
+    msg["From"] = YOUR_GMAIL
     msg["To"] = to_email
+    msg.attach(MIMEText(html_body, "html"))
 
     try:
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
-            server.login("your_email@example.com", "your_password")
-            server.sendmail(msg["From"], [to_email], msg.as_string())
-        print("✅ Email sent successfully")
+            server.login(YOUR_GMAIL, YOUR_APP_PASSWORD)
+            server.send_message(msg)
+        print(f"✅ Feedback reply email sent to {to_email}")
     except Exception as e:
-        print("❌ Email sending failed:", e)
+        print(f"❌ Failed to send feedback reply email: {e}")
+
+def send_appointment_status_email(email, fullname, status, service=None, appointment_date=None, time=None):
+    try:
+        subject = f"Your Appointment has been {status}"
+        
+        # ✅ Create a beautiful HTML email
+        html_body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+            <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <h2 style="color: #0078d7; text-align: center;">Marmu Barber & Tattoo Shop</h2>
+                <p style="font-size: 16px; color: #333;">Hi {fullname},</p>
+                <p style="font-size: 16px; color: #333;">
+                    We wanted to let you know that your appointment has been 
+                    <strong style="color: {'#28a745' if status.lower() == 'approved' else '#d9534f'};">{status}</strong>.
+                </p>
+
+                <div style="background-color: #f8f9fa; padding: 15px 20px; border-radius: 6px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Service:</strong> {service or 'N/A'}</p>
+                    <p style="margin: 5px 0;"><strong>Date:</strong> {appointment_date or 'N/A'}</p>
+                    <p style="margin: 5px 0;"><strong>Time:</strong> {time or 'N/A'}</p>
+                </div>
+
+                <p style="font-size: 16px; color: #333;">
+                    Thank you for choosing <strong>Marmu Barber & Tattoo Shop</strong>! 
+                    We’re looking forward to serving you soon.
+                </p>
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+                <p style="font-size: 12px; color: #999; text-align: center;">
+                    &copy; {fullname}, this message was sent automatically from Marmu Barber & Tattoo Shop.
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        # ✅ Prepare the MIME message
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = YOUR_GMAIL
+        msg["To"] = email
+        msg.attach(MIMEText(html_body, "html"))
+
+        # ✅ Send using Gmail SMTP
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(YOUR_GMAIL, YOUR_APP_PASSWORD)
+            server.send_message(msg)
+
+        print(f"✅ Appointment status email sent to {email}")
+
+    except Exception as e:
+        print(f"⚠️ Failed to send email: {e}")
+
 
 # =========================================
 # STATIC FILES
@@ -413,9 +524,33 @@ def update_appointment(id):
     new_status = data.get("status")
 
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
+
+    # ✅ Update appointment status
     cursor.execute("UPDATE tbl_appointment SET status=%s WHERE id=%s", (new_status, id))
     conn.commit()
+
+    # ✅ Fetch user email and fullname (assuming you have user_id in tbl_appointment)
+    cursor.execute("""
+        SELECT a.fullname, u.email, a.service, a.appointment_date, a.time
+        FROM tbl_appointment a 
+        JOIN tbl_users u ON a.user_id = u.id 
+        WHERE a.id = %s
+    """, (id,))
+    user = cursor.fetchone()
+
+    # ✅ Send email if approved and user exists
+    user and new_status.lower() == "approved"
+        
+    send_appointment_status_email(
+        user.get('email'),
+        user.get('fullname'),
+        new_status,
+        service=user.get('service'),
+        appointment_date=user.get('appointment_date'),
+        time=user.get('time')
+    )
+
     cursor.close()
     conn.close()
     return jsonify({"message": f"Appointment #{id} updated to {new_status}"}), 200

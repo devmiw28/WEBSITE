@@ -24,6 +24,7 @@ function HomePage() {
     const newTheme = theme === 'dark-mode' ? 'light-mode' : 'dark-mode';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
+    document.body.className = newTheme; 
   };
 
   const handleBookNow = () => {
