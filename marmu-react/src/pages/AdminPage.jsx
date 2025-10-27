@@ -3,11 +3,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../App';
+import AdminAddUserModal from '../components/AdminAddUserModal';
+import AdminReplyModal from '../components/AdminReplyModal';
+import DashboardPanel from '../components/DashboardPanel';
 
 function AdminPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [activePanel, setActivePanel] = useState('appointments');
+  const [activePanel, setActivePanel] = useState('dashboard');
   const [appointments, setAppointments] = useState([]);
   const [users, setUsers] = useState([]);
   const [feedback, setFeedback] = useState([]);
@@ -15,6 +18,8 @@ function AdminPage() {
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [monthlyReport, setMonthlyReport] = useState(null);
 
   useEffect(() => {
     loadPanelData();
@@ -24,6 +29,30 @@ function AdminPage() {
     if (activePanel === 'appointments') loadAppointments();
     else if (activePanel === 'users') loadUsers();
     else if (activePanel === 'feedback') loadFeedback();
+    else if (activePanel === 'dashboard') {
+      loadSummary();
+      loadMonthlyReport();
+    }
+  };
+
+  const loadSummary = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/appointments/summary`);
+      const data = await res.json();
+      setSummary(data);
+    } catch (e) {
+      console.error('Failed to load summary', e);
+    }
+  };
+
+  const loadMonthlyReport = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/appointments/monthly-report`);
+      const data = await res.json();
+      setMonthlyReport(data);
+    } catch (e) {
+      console.error('Failed to load monthly report', e);
+    }
   };
 
   const loadAppointments = async () => {
@@ -114,19 +143,25 @@ function AdminPage() {
       <aside className="sidebar">
         <h2>Admin Menu</h2>
         <button
-          className="menu-btn"
+          className={`menu-btn ${activePanel === 'dashboard' ? 'active-menu-btn' : ''}`}
+          onClick={() => setActivePanel('dashboard')}
+        >
+          📊 Dashboard
+        </button>
+        <button
+          className={`menu-btn ${activePanel === 'appointments' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('appointments')}
         >
           📅 Manage Appointments
         </button>
         <button
-          className="menu-btn"
+          className={`menu-btn ${activePanel === 'users' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('users')}
         >
           👤 Manage Users
         </button>
         <button
-          className="menu-btn"
+          className={`menu-btn ${activePanel === 'feedback' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('feedback')}
         >
           ⭐ View Feedback
@@ -144,6 +179,16 @@ function AdminPage() {
 
       {/* Main Content */}
       <main className="content">
+        {activePanel === 'dashboard' && (
+          <>
+            <DashboardPanel
+              summary={summary}
+              monthlyReport={monthlyReport}
+              onScheduleViewClick={() => setShowScheduleView(true)}
+            />
+          </>
+        )}
+
         {activePanel === 'appointments' && (
           <div>
             <h2>Manage Appointments</h2>
@@ -238,7 +283,7 @@ function AdminPage() {
         )}
 
         {activePanel === 'feedback' && (
-          <div>
+          <>
             <h2>View Feedback</h2>
             {loading ? (
               <p>Loading...</p>
@@ -284,9 +329,23 @@ function AdminPage() {
                 </tbody>
               </table>
             )}
-          </div>
+          </>
         )}
       </main>
+      {showAddUserModal && (
+        <AdminAddUserModal
+          onClose={() => setShowAddUserModal(false)}
+          onUserAdded={loadUsers}
+        />
+      )}
+      {showReplyModal && selectedFeedback && (
+        <AdminReplyModal
+          feedback={selectedFeedback}
+          onClose={() => setShowReplyModal(false)}
+          onReplySent={loadFeedback}  
+        />
+      )}
+
     </div>
   );
 }

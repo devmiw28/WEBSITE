@@ -2,6 +2,8 @@ from flask import Flask, request, session, jsonify, send_from_directory
 from flask_cors import CORS
 import mysql.connector, smtplib, hashlib, random, re, os, glob
 from datetime import datetime, timedelta
+from collections import Counter
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
@@ -502,6 +504,63 @@ def is_admin_authenticated():
     # Placeholder: Implement your session/token/cookie check here
     return False
 
+@app.route("/admin/appointments/summary", methods=["GET"])
+def appointments_summary():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # ✅ More efficient single SQL query instead of looping in Python
+    cursor.execute("""
+        SELECT 
+            COUNT(*) AS totalAppointments,
+            SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pendingAppointments,
+            SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END) AS approvedAppointments
+        FROM tbl_appointment
+    """)
+    summary = cursor.fetchone()
+
+    # ✅ Ensure default values in case of None
+    result = {
+        "totalAppointments": summary["totalAppointments"] or 0,
+        "pendingAppointments": summary["pendingAppointments"] or 0,
+        "approvedAppointments": summary["approvedAppointments"] or 0
+    }
+
+    cursor.close()
+    conn.close()
+
+    return jsonify(result)
+
+@app.route("/admin/appointments/monthly-report", methods=["GET"])
+def monthly_report():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # ✅ Defensive: handle missing or invalid dates
+    cursor.execute("""
+        SELECT service, COUNT(*) AS count
+        FROM tbl_appointment
+        WHERE appointment_date IS NOT NULL
+          AND MONTH(appointment_date) = MONTH(CURRENT_DATE())
+          AND YEAR(appointment_date) = YEAR(CURRENT_DATE())
+        GROUP BY service
+    """)
+    report = cursor.fetchall()
+
+    # ✅ Include all services, even if none found
+    result = {"haircut": 0, "tattoo": 0}
+
+    for row in report:
+        key = (row["service"] or "").strip().lower()
+        if key in result:
+            result[key] = row["count"]
+
+    cursor.close()
+    conn.close()
+
+    return jsonify(result)
+
+
 @app.route("/admin/appointments", methods=["GET"])
 def get_appointments():
     conn = None # Initialize conn
@@ -539,8 +598,7 @@ def update_appointment(id):
     """, (id,))
     user = cursor.fetchone()
 
-    # ✅ Send email if approved and user exists
-    user and new_status.lower() == "approved"
+    user and new_status.lower() == {'approved', 'denied'}
         
     send_appointment_status_email(
         user.get('email'),
@@ -622,7 +680,7 @@ def add_user():
         print("❌ Server Error:", e)
         return jsonify({"error": str(e)}), 500
 
-@app.route("/admin/feedback/reply/<int:feedback_id>", methods=["POST"])
+@app.route("/admin/feedback/<int:feedback_id>/reply", methods=["POST"])
 def admin_reply_feedback(feedback_id):
     data = request.get_json()
     reply = data.get("reply")
