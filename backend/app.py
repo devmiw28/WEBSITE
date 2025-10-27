@@ -410,6 +410,21 @@ def reset_password():
 # =========================================
 # BOOKINGS
 # =========================================
+
+# @app.route("/available-staff/<day>", methods=["GET"])
+# def get_available_staff(day):
+#     conn = get_connection()
+#     cursor = conn.cursor(dictionary=True)
+#     cursor.execute("""
+#         SELECT staff_id, staff_name, start_time, end_time
+#         FROM tbl_staff_availability
+#         WHERE day_of_week = %s AND is_available = 1
+#     """, (day,))
+#     staff = cursor.fetchall()
+#     cursor.close()
+#     conn.close()
+#     return jsonify(staff)
+
 @app.route("/api/current_user")
 def current_user():
     if 'username' in session:
@@ -503,6 +518,45 @@ def get_available_slots():
 def is_admin_authenticated():
     # Placeholder: Implement your session/token/cookie check here
     return False
+
+@app.route("/admin/dashboard-data", methods=["GET"])
+def admin_dashboard_data():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # total clients - adjust WHERE clause if your users table differs
+    cursor.execute("SELECT COUNT(*) AS total_clients FROM tbl_users WHERE role = 'client'")
+    total_clients = cursor.fetchone().get('total_clients', 0)
+
+    # notifications: pending appointments, new feedback (no reply)
+    cursor.execute("SELECT COUNT(*) AS pending_appointments FROM tbl_appointment WHERE status = 'Pending'")
+    pending = cursor.fetchone().get('pending_appointments', 0)
+
+    cursor.execute("SELECT COUNT(*) AS new_feedback FROM tbl_feedback WHERE reply IS NULL OR reply = ''")
+    new_feedback = cursor.fetchone().get('new_feedback', 0)
+
+    # artist performance: name + completed jobs
+    cursor.execute("""
+        SELECT COALESCE(artist_name, 'Unassigned') AS artist_name, COUNT(*) AS total_jobs
+        FROM tbl_appointment
+        WHERE status = 'Done' OR status = 'Completed'
+        GROUP BY artist_name
+        ORDER BY total_jobs DESC
+        LIMIT 10
+    """)
+    artist_performance = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({
+        "total_clients": total_clients,
+        "notifications": {
+            "pending_appointments": pending,
+            "new_feedback": new_feedback
+        },
+        "artist_performance": artist_performance
+    })
 
 @app.route("/admin/appointments/summary", methods=["GET"])
 def appointments_summary():

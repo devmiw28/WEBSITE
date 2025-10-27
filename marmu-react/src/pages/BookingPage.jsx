@@ -10,7 +10,7 @@ const AVAILABLE_TIMES = [
   "13:00", "14:00", "15:00", "16:00", "17:00"
 ];
 
-function BookingPage() {
+export default function BookingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
@@ -175,4 +175,3 @@ function BookingPage() {
   );
 }
 
-export default BookingPage;

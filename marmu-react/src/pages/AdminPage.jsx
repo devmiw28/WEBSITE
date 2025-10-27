@@ -20,6 +20,9 @@ function AdminPage() {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [summary, setSummary] = useState(null);
   const [monthlyReport, setMonthlyReport] = useState(null);
+  const [totalClients, setTotalClients] = useState(null);
+  const [notifications, setNotifications] = useState(null);
+  const [artistPerformance, setArtistPerformance] = useState(null);
 
   useEffect(() => {
     loadPanelData();
@@ -32,6 +35,21 @@ function AdminPage() {
     else if (activePanel === 'dashboard') {
       loadSummary();
       loadMonthlyReport();
+    }
+  };
+
+  const loadDashboardData = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/dashboard-data`);
+      const data = await res.json();
+      setTotalClients(data.total_clients ?? 0);
+      setNotifications(data.notifications ?? { pending_appointments: 0, new_feedback: 0 });
+      setArtistPerformance(data.artist_performance ?? []);
+    } catch (e) {
+      console.error('Failed to load dashboard data', e);
+      setTotalClients(0);
+      setNotifications({ pending_appointments: 0, new_feedback: 0 });
+      setArtistPerformance([]);
     }
   };
 
@@ -184,7 +202,9 @@ function AdminPage() {
             <DashboardPanel
               summary={summary}
               monthlyReport={monthlyReport}
-              onScheduleViewClick={() => setShowScheduleView(true)}
+              totalClients={totalClients}
+              notifications={notifications}
+              artistPerformance={artistPerformance}
             />
           </>
         )}
@@ -342,7 +362,7 @@ function AdminPage() {
         <AdminReplyModal
           feedback={selectedFeedback}
           onClose={() => setShowReplyModal(false)}
-          onReplySent={loadFeedback}  
+          onReplySent={loadFeedback}
         />
       )}
 
