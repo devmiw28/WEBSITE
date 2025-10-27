@@ -4,15 +4,31 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../App';
 import Navbar from '../components/Navbar';
+import ProfileMenu from '../components/ProfileMenu.jsx';
+import '../css/navbar.css';
 
-function FeedbackPage() {
+export default function FeedbackPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [selectedRating, setSelectedRating] = useState(0);
   const [message, setMessage] = useState('');
   const [feedbackList, setFeedbackList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [theme, setTheme] = useState('dark-mode');
 
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark-mode';
+    setTheme(savedTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark-mode' ? 'light-mode' : 'dark-mode';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.body.className = newTheme; 
+  };
+  
   useEffect(() => {
     loadFeedback();
   }, []);
@@ -79,8 +95,10 @@ function FeedbackPage() {
 
   return (
     <div className="dark-mode">
-      <Navbar user={user} />
-
+      <Navbar
+        onProfileClick={() => setShowProfileMenu(!showProfileMenu)}
+        user={user}
+      />
       <main>
         {/* Star Rating */}
         <section className="feedback-form">
@@ -104,8 +122,8 @@ function FeedbackPage() {
             rows="5"
           />
 
-          <button 
-            className="submit-btn" 
+          <button
+            className="submit-btn"
             onClick={submitFeedback}
             disabled={loading}
           >
@@ -135,8 +153,13 @@ function FeedbackPage() {
           </div>
         </section>
       </main>
+      {showProfileMenu && (
+        <ProfileMenu 
+          onClose={() => setShowProfileMenu(false)}
+          onToggleTheme={toggleTheme}
+          theme={theme}
+        />
+      )}
     </div>
   );
 }
-
-export default FeedbackPage;

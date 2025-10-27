@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../App';
 import AdminAddUserModal from '../components/AdminAddUserModal';
 import AdminReplyModal from '../components/AdminReplyModal';
 import DashboardPanel from '../components/DashboardPanel';
+import StaffAvailabilityPage from '../pages/StaffAvailabilityPage';
 
 function AdminPage() {
   const navigate = useNavigate();
@@ -24,8 +25,10 @@ function AdminPage() {
   const [notifications, setNotifications] = useState(null);
   const [artistPerformance, setArtistPerformance] = useState(null);
 
+
   useEffect(() => {
     loadPanelData();
+    loadDashboardData();
   }, [activePanel]);
 
   const loadPanelData = () => {
@@ -167,6 +170,12 @@ function AdminPage() {
           📊 Dashboard
         </button>
         <button
+          className={`menu-btn ${activePanel === 'availability' ? 'active-menu-btn' : ''}`}
+          onClick={() => setActivePanel('availability')}
+        >
+          🕒 Staff Availability
+        </button>
+        <button
           className={`menu-btn ${activePanel === 'appointments' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('appointments')}
         >
@@ -221,6 +230,7 @@ function AdminPage() {
                     <th>ID</th>
                     <th>Name</th>
                     <th>Service</th>
+                    <th>Artist</th>
                     <th>Date</th>
                     <th>Time</th>
                     <th>Status</th>
@@ -233,6 +243,7 @@ function AdminPage() {
                       <td>{apt.id}</td>
                       <td>{apt.fullname}</td>
                       <td>{apt.service}</td>
+                      <td>{apt.artist_name}</td>
                       <td>{apt.appointment_date}</td>
                       <td>{apt.time}</td>
                       <td className={`status ${apt.status.toLowerCase()}`}>
@@ -263,6 +274,12 @@ function AdminPage() {
                 </tbody>
               </table>
             )}
+          </div>
+        )}
+
+        {activePanel === 'availability' && (
+          <div className="panel-container">
+            <StaffAvailabilityPage />
           </div>
         )}
 

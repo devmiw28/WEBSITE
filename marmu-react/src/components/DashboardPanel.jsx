@@ -8,7 +8,6 @@ export default function DashboardPanel({
   totalClients,
   notifications,
   artistPerformance,
-  onScheduleViewClick
 }) {
   if (!summary || !monthlyReport) return <p>Loading Appointment Dashboard...</p>;
 

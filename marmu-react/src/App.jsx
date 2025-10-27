@@ -11,6 +11,7 @@ import BookingPage from './pages/BookingPage';
 import ServicesPage from './pages/ServicesPage';
 import FeedbackPage from './pages/FeedbackPage';
 import AdminPage from './pages/AdminPage';
+import StaffAvailabilityPage from './pages/StaffAvailabilityPage';
 
 // Auth Context
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -28,8 +29,8 @@ function ProtectedRoute({ children, adminOnly = false }) {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  
-  if (adminOnly && user.role !== 'Admin') {
+
+  if (adminOnly && user.role !== 'Admin' && user.role !== 'Barber' && user.role !== 'TattooArtist') {
     return <Navigate to="/" replace />;
   }
   
@@ -54,6 +55,7 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="/staff/availability" element={<StaffAvailabilityPage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/feedback" element={<FeedbackPage />} />
             <Route 

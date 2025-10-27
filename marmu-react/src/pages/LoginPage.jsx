@@ -51,7 +51,8 @@ function LoginPage() {
       login({
         username: data.username,
         fullname: data.fullname,
-        role: data.role
+        role: data.role,
+        email: data.email  // ✅ added
       });
 
       // Redirect based on role
@@ -60,6 +61,7 @@ function LoginPage() {
       } else {
         navigate('/');
       }
+
     } catch (err) {
       setError(err.message);
     } finally {

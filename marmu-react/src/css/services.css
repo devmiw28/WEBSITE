@@ -1,12 +1,6 @@
-/* General Page Styles */
-.dark-mode {
-  background-color: #1a1a1a; /* Dark background from image */
-  color: #e0e0e0; /* Off-white text */
-  min-height: 100vh;
-  font-family: Arial, sans-serif;
-}
-
-/* Tab Navigation */
+/* ================================
+   Tab Navigation
+================================ */
 .tab-container {
   display: flex;
   justify-content: center;
@@ -18,7 +12,7 @@
 .tab-btn {
   background: none;
   border: none;
-  color: #a0a0a0; /* Muted color for inactive tabs */
+  color: #a0a0a0;
   padding: 15px 30px;
   font-size: 1.1rem;
   font-weight: bold;
@@ -26,7 +20,7 @@
   text-transform: uppercase;
   transition: all 0.3s ease;
   border-bottom: 3px solid transparent;
-  margin-bottom: -1px; /* Aligns with the container's border */
+  margin-bottom: -1px;
 }
 
 .tab-btn:hover {
@@ -34,23 +28,25 @@
 }
 
 .tab-btn.active {
-  color: #ae8f6f; /* Gold/tan accent color from image */
+  color: #ae8f6f;
   border-bottom: 3px solid #ae8f6f;
 }
 
-/* Gallery Section */
+/* ================================
+   Gallery Containers
+================================ */
 .gallery-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
-/* This overrides the inline styles in your JSX for a consistent look */
+/* Override inline styles from JSX */
 .gallery-container h2 {
   text-align: center;
-  color: #ae8f6f !important; /* Use important to override inline style */
+  color: #ae8f6f !important;
   margin-bottom: 30px !important;
-  font-family: 'Georgia', serif; /* Serif font like the image */
+  font-family: 'Georgia', serif;
   font-size: 2rem;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -58,18 +54,20 @@
 
 .gallery-grid {
   display: grid;
-  /* Creates a responsive grid that fits as many 300px cards as possible */
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
 }
 
-/* Gallery Card Styling */
+/* ================================
+   Gallery Card Styling
+================================ */
 .gallery-card {
   background-color: #252525;
   border: 1px solid #333;
   text-align: center;
-  overflow: hidden; /* Ensures image zoom doesn't break layout */
+  overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer; /* ✅ indicates clickable */
 }
 
 .gallery-card:hover {
@@ -80,15 +78,15 @@
 .gallery-card img {
   width: 100%;
   height: 300px;
-  object-fit: cover; /* Prevents images from stretching */
+  object-fit: cover;
   display: block;
-  filter: grayscale(100%); /* Matches the B&W feel of the image */
+  filter: grayscale(100%);
   transition: all 0.4s ease;
 }
 
 .gallery-card:hover img {
-  filter: grayscale(0%); /* Brings color back on hover */
-  transform: scale(1.05); /* Slight zoom effect */
+  filter: grayscale(0%);
+  transform: scale(1.05);
 }
 
 .gallery-card h3 {
@@ -101,7 +99,56 @@
   letter-spacing: 0.5px;
 }
 
-/* Price List Section (See JSX update below) */
+/* ================================
+   Image Modal (Expanded View)
+================================ */
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  cursor: zoom-out;
+  animation: fadeIn 0.2s ease;
+}
+
+.image-modal-content img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 10px;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+  animation: zoomIn 0.25s ease;
+}
+
+/* Smooth animation for modal appearance */
+@keyframes fadeIn {
+  from {
+    background-color: rgba(0, 0, 0, 0);
+  }
+  to {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ================================
+   Price List Section
+================================ */
 .price-list-container {
   text-align: center;
   max-width: 800px;
@@ -109,6 +156,7 @@
   padding: 40px;
   background-color: #222;
   border: 1px solid #333;
+  border-radius: 6px;
 }
 
 .price-list-container h2 {
@@ -134,22 +182,24 @@
 }
 
 .price-list-item span {
-  color: #ae8f6f; /* Accent color for the currency */
+  color: #ae8f6f;
   font-weight: bold;
   margin-left: 10px;
 }
 
-/* Book Now Button Section */
+/* ================================
+   Book Now Section
+================================ */
 .book-now-section {
   text-align: center;
   padding: 40px 20px;
-  background-color: #111; /* Slightly different footer background */
+  background-color: #111;
   margin-top: 50px;
 }
 
 .book-now-btn {
   background-color: #ae8f6f;
-  color: #1a1a1a; /* Dark text on light button */
+  color: #1a1a1a;
   border: none;
   padding: 15px 40px;
   font-size: 1.1rem;
@@ -162,12 +212,14 @@
 }
 
 .book-now-btn:hover {
-  background-color: #c5a47e; /* Lighter gold on hover */
+  background-color: #c5a47e;
   box-shadow: 0 4px 15px rgba(174, 143, 111, 0.3);
   transform: translateY(-2px);
 }
 
-/* Utility & Loading States */
+/* ================================
+   Utility & Loading States
+================================ */
 .hidden {
   display: none;
 }

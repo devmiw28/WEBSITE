@@ -263,7 +263,7 @@ def login():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT username, fullname, hash_pass, role 
+            SELECT username, fullname, email, hash_pass, role 
             FROM tbl_users 
             WHERE username = %s OR email = %s
         """, (username_or_email, username_or_email))
@@ -274,12 +274,14 @@ def login():
 
         session["username"] = user["username"]
         session["fullname"] = user["fullname"]
+        session["email"] = user["email"]
         session["role"] = user["role"]
 
         return jsonify({
             "message": f"Welcome, {user['fullname']}",
             "username": user["username"],
             "fullname": user["fullname"],
+            "email": user["email"],
             "role": user["role"]
         }), 200
 
@@ -411,19 +413,53 @@ def reset_password():
 # BOOKINGS
 # =========================================
 
-# @app.route("/available-staff/<day>", methods=["GET"])
-# def get_available_staff(day):
-#     conn = get_connection()
-#     cursor = conn.cursor(dictionary=True)
-#     cursor.execute("""
-#         SELECT staff_id, staff_name, start_time, end_time
-#         FROM tbl_staff_availability
-#         WHERE day_of_week = %s AND is_available = 1
-#     """, (day,))
-#     staff = cursor.fetchall()
-#     cursor.close()
-#     conn.close()
-#     return jsonify(staff)
+@app.route("/staff/availability", methods=["POST"])
+def add_availability():
+    data = request.get_json()
+    staff_id = data.get('staff_id')
+    available_date = data.get('available_date')
+    available_times = data.get('available_times', [])
+
+    if not staff_id or not available_date or not available_times:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    for time in available_times:
+        cursor.execute("""
+            INSERT INTO tbl_staff_availability (staff_id, available_date, available_time)
+            VALUES (%s, %s, %s)
+        """, (staff_id, available_date, time))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Availability saved successfully"}), 201
+
+@app.route("/staff/<service>", methods=["GET"])
+def get_staff_by_service(service):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Map service to role
+    role = None
+    if service.lower() == "haircut":
+        role = "Barber"
+    elif service.lower() == "tattoo":
+        role = "TattooArtist"
+
+    if not role:
+        return jsonify([]), 200
+
+    cursor.execute("SELECT id, fullname FROM tbl_users WHERE role = %s", (role,))
+    staff = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify(staff), 200
 
 @app.route("/api/current_user")
 def current_user():
@@ -437,39 +473,57 @@ def current_user():
 @app.route("/api/bookings", methods=["POST"])
 def create_booking():
     data = request.get_json()
-    username, fullname, service, date, time = (
-        data.get("username"),
-        data.get("fullname"),
-        data.get("service"),
-        data.get("date"),
-        data.get("time"),
-    )
+    username = data.get("username")
+    fullname = data.get("fullname")
+    service = data.get("service")
+    date = data.get("date")
+    time = data.get("time")
+    staff_id = data.get("staff_id")  # 🔹 Added
     remarks = data.get("remarks", "")
 
-    if not all([username, fullname, service, date, time]):
+    if not all([username, fullname, service, date, time, staff_id]):
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
         conn = get_connection()
         cursor = conn.cursor()
+
+        # Find user ID
         cursor.execute("SELECT id FROM tbl_users WHERE username=%s", (username,))
         user = cursor.fetchone()
         if not user:
             return jsonify({"error": "User not found"}), 404
 
+        # Get artist name
+        cursor.execute("SELECT fullname FROM tbl_users WHERE id=%s", (staff_id,))
+        artist = cursor.fetchone()
+        artist_name = artist[0] if artist else None
+
+        # Check if time slot is already booked
         cursor.execute("""
             SELECT id FROM tbl_appointment 
-            WHERE appointment_date=%s AND time=%s AND status != 'Cancelled'
-        """, (date, time))
+            WHERE appointment_date=%s AND time=%s AND artist_id=%s AND status != 'Cancelled'
+        """, (date, time, staff_id))
         if cursor.fetchone():
             return jsonify({"error": "This time slot is already booked"}), 409
 
+        # Insert appointment
         cursor.execute("""
-            INSERT INTO tbl_appointment (user_id, fullname, service, appointment_date, time, remarks, status)
-            VALUES (%s, %s, %s, %s, %s, %s, 'Pending')
-        """, (user[0], fullname, service, date, time, remarks))
+            INSERT INTO tbl_appointment 
+                (user_id, fullname, service, appointment_date, time, remarks, status, artist_id, artist_name)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Pending', %s, %s)
+        """, (user[0], fullname, service, date, time, remarks, staff_id, artist_name))
+
+        # Mark slot as booked in availability table
+        cursor.execute("""
+            UPDATE tbl_staff_availability
+            SET is_booked = TRUE
+            WHERE staff_id = %s AND available_date = %s AND available_time = %s
+        """, (staff_id, date, time))
+
         conn.commit()
         return jsonify({"message": "Booking created successfully!", "status": "Pending"}), 201
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
@@ -494,23 +548,27 @@ def get_user_appointments(username):
 
 @app.route("/appointments/available_slots", methods=["GET"])
 def get_available_slots():
-    date = request.args.get("date")  # instead of "appointment_date"
-    if not date:
-        return jsonify({"error": "Date parameter required"}), 400
+    date = request.args.get("date")
+    staff_id = request.args.get("staff_id")
 
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT time FROM tbl_appointment
-            WHERE appointment_date=%s AND status != 'Cancelled'
-        """, (date,))
-        booked_times = [row[0] for row in cursor.fetchall()]
-        return jsonify({"appointment_date": date, "booked_times": booked_times}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
+    if not date or not staff_id:
+        return jsonify({"error": "Missing parameters"}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT available_time FROM tbl_staff_availability
+        WHERE staff_id = %s AND available_date = %s AND is_booked = FALSE
+        ORDER BY available_time ASC
+    """, (staff_id, date))
+
+    available_times = [row["available_time"] for row in cursor.fetchall()]
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"available_times": available_times})
 
 # =========================================
 # ADMIN ENDPOINTS
@@ -523,9 +581,9 @@ def is_admin_authenticated():
 def admin_dashboard_data():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-
+    # Di napapasa yug value
     # total clients - adjust WHERE clause if your users table differs
-    cursor.execute("SELECT COUNT(*) AS total_clients FROM tbl_users WHERE role = 'client'")
+    cursor.execute("SELECT COUNT(*) AS total_clients FROM tbl_users WHERE role = 'user'")
     total_clients = cursor.fetchone().get('total_clients', 0)
 
     # notifications: pending appointments, new feedback (no reply)
@@ -539,11 +597,12 @@ def admin_dashboard_data():
     cursor.execute("""
         SELECT COALESCE(artist_name, 'Unassigned') AS artist_name, COUNT(*) AS total_jobs
         FROM tbl_appointment
-        WHERE status = 'Done' OR status = 'Completed'
+        WHERE status IN ('Done', 'Completed')
         GROUP BY artist_name
         ORDER BY total_jobs DESC
         LIMIT 10
     """)
+
     artist_performance = cursor.fetchall()
 
     cursor.close()
@@ -614,14 +673,39 @@ def monthly_report():
 
     return jsonify(result)
 
+@app.route("/admin/staff", methods=["GET"])
+def get_staff_by_role():
+    role = request.args.get("role")
+    if not role:
+        return jsonify([])
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id, fullname FROM tbl_users WHERE LOWER(role) = %s", (role,))
+    staff = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify(staff)
 
 @app.route("/admin/appointments", methods=["GET"])
 def get_appointments():
-    conn = None # Initialize conn
+    conn = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT id, fullname, service, appointment_date, time, COALESCE(status, 'Pending') AS status FROM tbl_appointment")
+        cursor.execute("""
+            SELECT 
+                a.id, 
+                a.fullname, 
+                a.service, 
+                a.artist_name,
+                a.appointment_date, 
+                a.time, 
+                COALESCE(a.status, 'Pending') AS status,
+                a.artist_name
+            FROM tbl_appointment a
+        """)
         data = cursor.fetchall()
         cursor.close()
         return jsonify(data)
@@ -631,41 +715,56 @@ def get_appointments():
         if conn:
             conn.close()
 
+
 @app.route("/admin/appointments/<int:id>", methods=["PUT"])
 def update_appointment(id):
     data = request.get_json()
     new_status = data.get("status")
 
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+    if not new_status:
+        return jsonify({"error": "Missing status field"}), 400
 
-    # ✅ Update appointment status
-    cursor.execute("UPDATE tbl_appointment SET status=%s WHERE id=%s", (new_status, id))
-    conn.commit()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
 
-    # ✅ Fetch user email and fullname (assuming you have user_id in tbl_appointment)
-    cursor.execute("""
-        SELECT a.fullname, u.email, a.service, a.appointment_date, a.time
-        FROM tbl_appointment a 
-        JOIN tbl_users u ON a.user_id = u.id 
-        WHERE a.id = %s
-    """, (id,))
-    user = cursor.fetchone()
+        cursor.execute("UPDATE tbl_appointment SET status = %s WHERE id = %s", (new_status, id))
+        conn.commit()
 
-    user and new_status.lower() == {'approved', 'denied'}
-        
-    send_appointment_status_email(
-        user.get('email'),
-        user.get('fullname'),
-        new_status,
-        service=user.get('service'),
-        appointment_date=user.get('appointment_date'),
-        time=user.get('time')
-    )
+        cursor.execute("""
+            SELECT 
+                a.fullname, 
+                u.email, 
+                a.service,
+                a.artist_name,
+                a.appointment_date, 
+                a.time
+            FROM tbl_appointment a 
+            JOIN tbl_users u ON a.user_id = u.id 
+            WHERE a.id = %s
+        """, (id,))
+        user = cursor.fetchone()
 
-    cursor.close()
-    conn.close()
-    return jsonify({"message": f"Appointment #{id} updated to {new_status}"}), 200
+        if user and new_status.lower() in ("approved", "denied"):
+            send_appointment_status_email(
+                to_email=user["email"],
+                fullname=user["fullname"],
+                status=new_status,
+                artist_name=user["artist_name"],
+                service=user["service"],
+                appointment_date=user["appointment_date"],
+                time=user["time"]
+            )
+
+        cursor.close()
+        conn.close()
+        return jsonify({"message": f"Appointment #{id} updated to {new_status}"}), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {e}"}), 500
+    finally:
+        if conn:
+            conn.close()
 
 @app.route("/admin/users", methods=["GET"])
 def get_users():

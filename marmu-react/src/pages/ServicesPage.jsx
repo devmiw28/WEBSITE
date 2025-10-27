@@ -4,16 +4,33 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../App';
 import Navbar from '../components/Navbar';
+import ProfileMenu from '../components/ProfileMenu.jsx';
 import '../css/services.css';
 
-function ServicesPage() {
+export default function ServicesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'tattoo');
   const [tattooDesigns, setTattooDesigns] = useState([]);
   const [haircutStyles, setHaircutStyles] = useState([]);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [theme, setTheme] = useState('dark-mode');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark-mode';
+    setTheme(savedTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark-mode' ? 'light-mode' : 'dark-mode';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.body.className = newTheme;
+  };
+
 
   useEffect(() => {
     loadImages();
@@ -38,17 +55,12 @@ function ServicesPage() {
   };
 
   const renderGalleryCards = (items) => {
-    if (loading) {
-      return <div className="loading">Loading...</div>;
-    }
-
-    if (items.length === 0) {
-      return <div className="no-items">No items available</div>;
-    }
+    if (loading) return <div className="loading">Loading...</div>;
+    if (items.length === 0) return <div className="no-items">No items available</div>;
 
     return items.map((item, index) => (
-      <div key={index} className="gallery-card">
-        <img src={`/${item.image}`} alt={item.name} />
+      <div key={index} className="gallery-card" onClick={() => setSelectedImage(item.image)}>
+        <img src={item.image} alt={item.name} />
         <h3>{item.name}</h3>
       </div>
     ));
@@ -56,7 +68,10 @@ function ServicesPage() {
 
   return (
     <div className="dark-mode">
-      <Navbar user={user} />
+      <Navbar
+        onProfileClick={() => setShowProfileMenu(!showProfileMenu)}
+        user={user}
+      />
 
       {/* Tab Navigation */}
       <div className="tab-container">
@@ -132,8 +147,20 @@ function ServicesPage() {
           📅 Book an Appointment Now
         </button>
       </div>
+      {selectedImage && (
+        <div className="image-modal" onClick={() => setSelectedImage(null)}>
+          <div className="image-modal-content">
+            <img src={selectedImage} alt="Expanded view" />
+          </div>
+        </div>
+      )}
+      {showProfileMenu && (
+        <ProfileMenu
+          onClose={() => setShowProfileMenu(false)}
+          onToggleTheme={toggleTheme}
+          theme={theme}
+        />
+      )}
     </div>
   );
 }
-
-export default ServicesPage;

@@ -1,0 +1,40 @@
+/* =========================================================
+   NAVBAR
+========================================================= */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #222;
+  padding: 10px 20px;
+}
+
+.nav-item {
+  color: white;
+  text-decoration: none;
+  margin: 0 15px;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+.nav-item:hover {
+  color: var(--gold);
+}
+
+.Logo {
+  height: 50px;
+}
+
+.profile-btn,
+.home-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+.profile-btn {
+  font-size: 1.5em;
+}
+.home-btn {
+  font-size: 1.8em;
+  margin-right: 20px;
+}

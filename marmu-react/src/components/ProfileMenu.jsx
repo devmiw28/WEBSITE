@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 const API_BASE_URL = 'http://127.0.0.1:5000';
 
-function ProfileMenu({ onClose, onToggleTheme, theme }) {
+export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [appointments, setAppointments] = useState([]);
@@ -56,12 +56,12 @@ function ProfileMenu({ onClose, onToggleTheme, theme }) {
           <p>Email: {user?.email || '-'}</p>
           <hr />
           
-          <h3>📅 Upcoming Appointments</h3>
+          <h3>📅 Your Appointments</h3>
           <ul>
             {loading ? (
               <li>Loading...</li>
             ) : appointments.length === 0 ? (
-              <li>No upcoming appointments.</li>
+              <li>You have no appointments found.</li>
             ) : (
               appointments.map((apt, index) => (
                 <li key={index}>
@@ -84,5 +84,3 @@ function ProfileMenu({ onClose, onToggleTheme, theme }) {
     </>
   );
 }
-
-export default ProfileMenu;

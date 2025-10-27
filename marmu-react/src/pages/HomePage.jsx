@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx'; // Added .jsx
+import { useAuth } from '../context/AuthContext.jsx'; 
 import { API_BASE_URL } from '../App';
-import Navbar from '../components/Navbar.jsx';       // Added .jsx
-import ProfileMenu from '../components/ProfileMenu.jsx'; // Added .jsx
-import '../css/homepage.css'; // This path is correct based on your file structure
+import Navbar from '../components/Navbar.jsx';       
+import ProfileMenu from '../components/ProfileMenu.jsx'; 
+import '../css/style.css';
+import '../css/navbar.css';
 
 function HomePage() {
   const navigate = useNavigate();
@@ -13,9 +14,6 @@ function HomePage() {
   const [theme, setTheme] = useState('dark-mode');
 
   useEffect(() => {
-    // In a real application, you should move persistent data 
-    // storage (like theme) to a proper state management solution 
-    // or context, or use a Firestore database for user settings.
     const savedTheme = localStorage.getItem('theme') || 'dark-mode';
     setTheme(savedTheme);
   }, []);

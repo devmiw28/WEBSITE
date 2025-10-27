@@ -4,58 +4,74 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../App';
 import Navbar from '../components/Navbar';
-
-const AVAILABLE_TIMES = [
-  "09:00", "10:00", "11:00", "12:00",
-  "13:00", "14:00", "15:00", "16:00", "17:00"
-];
+import ProfileMenu from '../components/ProfileMenu.jsx';
+import '../css/navbar.css';
 
 export default function BookingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [formData, setFormData] = useState({
     service: '',
+    staff_id: '',
     date: '',
     time: '',
     remarks: ''
   });
+  const [staffList, setStaffList] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const today = new Date().toISOString().split('T')[0];
+
+  const [theme, setTheme] = useState('dark-mode');
 
   useEffect(() => {
-    if (formData.date) {
-      fetchAvailableSlots(formData.date);
-    }
-  }, [formData.date]);
+    const savedTheme = localStorage.getItem('theme') || 'dark-mode';
+    setTheme(savedTheme);
+  }, []);
 
-  const fetchAvailableSlots = async (date) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/appointments/available_slots?date=${date}`);
-      const data = await response.json();
-      const booked = data.booked_times || [];
-      const available = AVAILABLE_TIMES.filter(t => !booked.includes(t));
-      setAvailableTimes(available);
-    } catch (error) {
-      console.error('Error fetching slots:', error);
-      setAvailableTimes(AVAILABLE_TIMES);
-    }
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark-mode' ? 'light-mode' : 'dark-mode';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.body.className = newTheme;
   };
+
+  // Fetch staff list when service changes
+  useEffect(() => {
+    if (formData.service) {
+      fetch(`${API_BASE_URL}/staff/${formData.service}`)
+        .then(res => res.json())
+        .then(setStaffList)
+        .catch(err => console.error('Error fetching staff:', err));
+    } else {
+      setStaffList([]);
+    }
+  }, [formData.service]);
+
+  // Fetch available times when date or staff changes
+  useEffect(() => {
+    if (formData.date && formData.staff_id) {
+      fetch(`${API_BASE_URL}/appointments/available_slots?date=${formData.date}&staff_id=${formData.staff_id}`)
+        .then(res => res.json())
+        .then(data => setAvailableTimes(data.available_times || []))
+        .catch(err => console.error('Error fetching slots:', err));
+    }
+  }, [formData.date, formData.staff_id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!formData.service || !formData.date || !formData.time) {
+    if (!formData.service || !formData.staff_id || !formData.date || !formData.time) {
       alert('Please fill out all required fields');
       return;
     }
 
     setLoading(true);
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/bookings`, {
         method: 'POST',
@@ -68,56 +84,53 @@ export default function BookingPage() {
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Booking failed');
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Booking failed');
-      }
-
-      alert(`✅ Booking confirmed for ${user.fullname}\nService: ${formData.service}\nDate: ${formData.date}\nTime: ${formData.time}\nStatus: PENDING`);
-      
-      setFormData({
-        service: '',
-        date: '',
-        time: '',
-        remarks: ''
-      });
-    } catch (error) {
-      alert(`❌ Error: ${error.message}`);
+      alert(`✅ Booking confirmed for ${user.fullname}\nService: ${formData.service}\nDate: ${formData.date}\nTime: ${formData.time}`);
+      setFormData({ service: '', staff_id: '', date: '', time: '', remarks: '' });
+      setAvailableTimes([]);
+      setStaffList([]);
+    } catch (err) {
+      alert(`❌ ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const today = new Date().toISOString().split('T')[0];
-
   return (
     <div className="dark-mode">
-      <Navbar user={user} />
-      
+      <Navbar
+        onProfileClick={() => setShowProfileMenu(!showProfileMenu)}
+        user={user}
+      />
+
       <main className="booking-container">
         <form className="booking-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Full Name:</label>
-            <input
-              type="text"
-              value={user?.fullname || ''}
-              readOnly
-            />
+            <input type="text" value={user?.fullname || ''} readOnly />
           </div>
 
           <div className="form-group">
             <label>Service:</label>
-            <select
-              name="service"
-              value={formData.service}
-              onChange={handleChange}
-              required
-            >
+            <select name="service" value={formData.service} onChange={handleChange} required>
               <option value="">-- Select Service --</option>
               <option value="Haircut">Haircut</option>
               <option value="Tattoo">Tattoo</option>
             </select>
           </div>
+
+          {staffList.length > 0 && (
+            <div className="form-group">
+              <label>Select Staff:</label>
+              <select name="staff_id" value={formData.staff_id} onChange={handleChange} required>
+                <option value="">-- Select Staff --</option>
+                {staffList.map(staff => (
+                  <option key={staff.id} value={staff.id}>{staff.fullname}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="form-group">
             <label>Date:</label>
@@ -133,25 +146,13 @@ export default function BookingPage() {
 
           <div className="form-group">
             <label>Time:</label>
-            <select
-              name="time"
-              value={formData.time}
-              onChange={handleChange}
-              disabled={!formData.date}
-              required
-            >
-              {!formData.date ? (
-                <option>- Select a Date First -</option>
-              ) : availableTimes.length === 0 ? (
-                <option>- NO SLOTS AVAILABLE -</option>
-              ) : (
-                <>
-                  <option value="">-- Select Time --</option>
-                  {availableTimes.map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </>
-              )}
+            <select name="time" value={formData.time} onChange={handleChange} required disabled={!formData.staff_id || !formData.date}>
+              <option value="">
+                {!formData.staff_id ? '- Select Staff -' : availableTimes.length === 0 ? '- No Slots Available -' : '-- Select Time --'}
+              </option>
+              {availableTimes.map(time => (
+                <option key={time} value={time}>{time}</option>
+              ))}
             </select>
           </div>
 
@@ -161,7 +162,7 @@ export default function BookingPage() {
               name="remarks"
               value={formData.remarks}
               onChange={handleChange}
-              rows="4"
+              rows="3"
               placeholder="Any special requests or notes..."
             />
           </div>
@@ -171,7 +172,13 @@ export default function BookingPage() {
           </button>
         </form>
       </main>
+      {showProfileMenu && (
+        <ProfileMenu
+          onClose={() => setShowProfileMenu(false)}
+          onToggleTheme={toggleTheme}
+          theme={theme}
+        />
+      )}
     </div>
   );
 }
-

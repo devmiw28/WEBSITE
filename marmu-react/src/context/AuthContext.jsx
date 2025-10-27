@@ -8,7 +8,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in (from localStorage)
     const storedUsername = localStorage.getItem('username');
     const storedFullname = localStorage.getItem('fullname');
     const storedRole = localStorage.getItem('role');

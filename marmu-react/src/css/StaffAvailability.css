@@ -1,0 +1,35 @@
+.availability-page {
+  padding: 20px;
+  background: #1e1e1e;
+  color: #fff;
+  border-radius: 10px;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.time-grid button {
+  padding: 8px;
+  border: 1px solid #555;
+  background: #2c2c2c;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.time-grid button.selected {
+  background: #00c853;
+}
+
+.readonly-info input {
+  background: #333;
+  color: white;
+  border: none;
+  padding: 5px;
+  margin-bottom: 10px;
+  width: 100%;
+}
