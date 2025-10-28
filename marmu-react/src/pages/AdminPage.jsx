@@ -151,7 +151,7 @@ export default function AdminPage() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const renderStars = (count) => {
