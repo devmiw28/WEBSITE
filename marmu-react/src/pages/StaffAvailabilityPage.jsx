@@ -2,12 +2,13 @@
 import { useState, useEffect } from "react";
 import { API_BASE_URL } from "../App";
 import { useAuth } from "../context/AuthContext";
+import "../css/staffavailability.css";
 
 export default function StaffAvailabilityPage() {
-    const { user } = useAuth(); // contains fullname, id, role
+    const { user } = useAuth(); 
     const [date, setDate] = useState("");
     const [selectedTimes, setSelectedTimes] = useState([]);
-    const [role, setRole] = useState(""); // for admin
+    const [role, setRole] = useState(""); 
     const [staffList, setStaffList] = useState([]);
     const [selectedStaff, setSelectedStaff] = useState("");
 

@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx'; 
+import { useAuth } from '../context/AuthContext.jsx';
 import { API_BASE_URL } from '../App';
-import Navbar from '../components/Navbar.jsx';       
-import ProfileMenu from '../components/ProfileMenu.jsx'; 
+import Navbar from '../components/Navbar.jsx';
+import ProfileMenu from '../components/ProfileMenu.jsx';
+import LoginModal from '../components/LoginModal.jsx';
+import SignupModal from '../components/SignupModal.jsx';
 import '../css/style.css';
 import '../css/navbar.css';
+import '../css/authModal.css';
 
-function HomePage() {
+export default function HomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
   const [theme, setTheme] = useState('dark-mode');
 
   useEffect(() => {
@@ -22,21 +27,28 @@ function HomePage() {
     const newTheme = theme === 'dark-mode' ? 'light-mode' : 'dark-mode';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.body.className = newTheme; 
+    document.body.className = newTheme;
   };
 
   const handleBookNow = () => {
-    navigate('/book');
-  }
-  
+    if (!user) {
+      setShowLogin(true);
+    } else {
+      navigate('/book');
+    }
+  };
+
   const handleExploreTattoos = () => {
     navigate('/services?tab=tattoo');
   }
 
   return (
     <div className={theme}>
-      <Navbar 
-        onProfileClick={() => setShowProfileMenu(!showProfileMenu)}
+      <Navbar
+        onProfileClick={() => {
+          if (user) setShowProfileMenu(!showProfileMenu);
+          else setShowLogin(true);
+        }}
         user={user}
       />
 
@@ -48,7 +60,7 @@ function HomePage() {
         </div>
 
         <div className="container content">
-          
+
           {/* --- Section 1: Cuts that Define Confidence (Haircut focus) --- */}
           <div className="split">
             <div className="hero-text">
@@ -98,7 +110,7 @@ function HomePage() {
       {/* --- Footer (Updated to match image) --- */}
       <footer>
         <h3>Marmu Barber & Tattoo Shop</h3>
-        
+
         {/* Placeholder icons for social media, assuming you'll use Font Awesome */}
         <div className="social-icons">
           <a href="#" aria-label="Instagram">(IG)</a>
@@ -122,14 +134,29 @@ function HomePage() {
 
       {/* Profile Menu */}
       {showProfileMenu && (
-        <ProfileMenu 
+        <ProfileMenu
           onClose={() => setShowProfileMenu(false)}
           onToggleTheme={toggleTheme}
           theme={theme}
         />
       )}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        switchToSignup={() => {
+          setShowLogin(false);
+          setShowSignup(true);
+        }}
+      />
+
+      <SignupModal
+        isOpen={showSignup}
+        onClose={() => setShowSignup(false)}
+        switchToLogin={() => {
+          setShowSignup(false);
+          setShowLogin(true);
+        }}
+      />
     </div>
   );
 }
-
-export default HomePage;

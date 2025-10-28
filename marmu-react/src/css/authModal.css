@@ -1,0 +1,333 @@
+/* =========================================================
+   AUTH MODAL CSS - Login & Signup Modals
+========================================================= */
+
+/* =========================================================
+   SHARED MODAL STYLES
+========================================================= */
+.login-modal-overlay,
+.signup-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* =========================================================
+   LOGIN MODAL
+========================================================= */
+.login-modal-content {
+  background: #1e1e1e;
+  color: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  animation: modalFadeIn 0.3s ease;
+}
+
+.login-modal-logo {
+  display: block;
+  margin: 0 auto 10px auto;
+  width: 80px;
+}
+
+.login-modal-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: var(--gold);
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.login-modal-form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.login-modal-form-group label {
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+  color: var(--gold);
+}
+
+.login-modal-form-group input {
+  padding: 0.6rem;
+  border-radius: 5px;
+  border: 1px solid #555;
+  background: #2b2b2b;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.login-modal-form-group input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.login-modal-button {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 10px;
+  background: var(--gold);
+  border: none;
+  color: #000;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 1rem;
+}
+
+.login-modal-button:hover {
+  background: #f1c40f;
+}
+
+.login-modal-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  color: #888;
+}
+
+.login-modal-link {
+  color: var(--gold);
+  text-align: center;
+  margin-top: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  display: block;
+}
+
+.login-modal-link:hover {
+  color: #f1c40f;
+}
+
+.login-modal-error {
+  color: #ff4444;
+  text-align: center;
+  margin: 10px 0;
+  font-size: 0.9rem;
+  background: rgba(255, 68, 68, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ff4444;
+}
+
+/* =========================================================
+   SIGNUP MODAL
+========================================================= */
+.signup-modal-content {
+  background: #1e1e1e;
+  color: var(--gold);
+  padding: 1.5rem 2rem;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  animation: modalFadeIn 0.3s ease;
+  font-family: 'Georgia', serif;
+}
+
+.signup-modal-title {
+  text-align: center;
+  margin-bottom: 1.2rem;
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--gold);
+  padding-bottom: 0.3rem;
+  color: var(--gold);
+}
+
+/* Form group */
+.signup-modal-form-group {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-modal-form-group label {
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.signup-modal-form-group input {
+  background: #2b2b2b;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 4px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.9rem;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
+}
+
+.signup-modal-form-group input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.signup-modal-form-group input::placeholder {
+  color: #888;
+}
+
+/* OTP Group - Email input with OTP button */
+.otp-group {
+  display: flex;
+  gap: 6px;
+}
+
+.otp-group input {
+  flex: 1;
+}
+
+/* OTP button next to email input */
+.signup-modal-otp-btn {
+  background: var(--gold);
+  border: none;
+  color: #000;
+  border-radius: 4px;
+  padding: 0 12px;
+  font-weight: bold;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.signup-modal-otp-btn:hover {
+  background: #f1c40f;
+}
+
+.signup-modal-otp-btn:disabled {
+  background: #555;
+  cursor: not-allowed;
+  color: #888;
+}
+
+/* Sign Up button */
+.signup-modal-button {
+  width: 100%;
+  background: var(--gold);
+  border: none;
+  color: #000;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0.6rem 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+
+.signup-modal-button:hover {
+  background: #f1c40f;
+}
+
+.signup-modal-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  color: #888;
+}
+
+/* Error messages */
+.signup-modal-error {
+  color: #ff4444;
+  text-align: center;
+  margin: 8px 0;
+  font-size: 0.85rem;
+  background: rgba(255, 68, 68, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ff4444;
+}
+
+/* Success messages */
+.signup-modal-success {
+  color: #4caf50;
+  text-align: center;
+  margin: 8px 0;
+  font-size: 0.85rem;
+  background: rgba(76, 175, 80, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #4caf50;
+}
+
+/* Link back to login */
+.signup-modal-link {
+  color: var(--gold);
+  text-align: center;
+  margin-top: 15px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  display: block;
+}
+
+.signup-modal-link:hover {
+  color: #f1c40f;
+}
+
+/* =========================================================
+   ANIMATIONS (Shared)
+========================================================= */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE DESIGN
+========================================================= */
+@media (max-width: 480px) {
+  .login-modal-content,
+  .signup-modal-content {
+    width: 95%;
+    padding: 1.5rem;
+  }
+  
+  .login-modal-title,
+  .signup-modal-title {
+    font-size: 1.2rem;
+  }
+  
+  .otp-group {
+    flex-direction: column;
+  }
+  
+  .signup-modal-otp-btn {
+    width: 100%;
+    padding: 0.5rem;
+  }
+}

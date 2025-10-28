@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../App';
 import Navbar from '../components/Navbar';
 import ProfileMenu from '../components/ProfileMenu.jsx';
+import LoginModal from '../components/LoginModal.jsx';
+import SignupModal from '../components/SignupModal.jsx';
 import '../css/services.css';
 
 export default function ServicesPage() {
@@ -15,6 +17,8 @@ export default function ServicesPage() {
   const [tattooDesigns, setTattooDesigns] = useState([]);
   const [haircutStyles, setHaircutStyles] = useState([]);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [theme, setTheme] = useState('dark-mode');
@@ -69,7 +73,10 @@ export default function ServicesPage() {
   return (
     <div className="dark-mode">
       <Navbar
-        onProfileClick={() => setShowProfileMenu(!showProfileMenu)}
+        onProfileClick={() => {
+          if (user) setShowProfileMenu(!showProfileMenu);
+          else setShowLogin(true);
+        }}
         user={user}
       />
 
@@ -161,6 +168,23 @@ export default function ServicesPage() {
           theme={theme}
         />
       )}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        switchToSignup={() => {
+          setShowLogin(false);
+          setShowSignup(true);
+        }}
+      />
+
+      <SignupModal
+        isOpen={showSignup}
+        onClose={() => setShowSignup(false)}
+        switchToLogin={() => {
+          setShowSignup(false);
+          setShowLogin(true);
+        }}
+      />
     </div>
   );
 }

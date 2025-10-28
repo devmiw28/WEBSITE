@@ -2,10 +2,9 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// Import components (to be created)
 import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
+import LoginModal from './components/LoginModal';
+import SignupModal from './components/SignupModal';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import BookingPage from './pages/BookingPage';
 import ServicesPage from './pages/ServicesPage';
@@ -19,54 +18,67 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 const API_BASE_URL = 'http://127.0.0.1:5000';
 
 // Protected Route Component
-function ProtectedRoute({ children, adminOnly = false }) {
+function ProtectedRoute({ children, adminOnly = false, onLoginRequired }) {
   const { user, loading } = useAuth();
-  
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
-  
+
   if (!user) {
-    return <Navigate to="/login" replace />;
+    onLoginRequired?.(); // open login modal
+    return null;
   }
 
   if (adminOnly && user.role !== 'Admin' && user.role !== 'Barber' && user.role !== 'TattooArtist') {
     return <Navigate to="/" replace />;
   }
-  
+
   return children;
 }
 
 function App() {
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
   return (
     <Router>
       <AuthProvider>
         <div className="app">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+            {/* <Route path="/login" element={<LoginModal />} />
+            <Route path="/signup" element={<SignupModal />} /> */}
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route 
-              path="/book" 
+            <Route
+              path="/book"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute onLoginRequired={() => setShowLogin(true)}>
                   <BookingPage />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route path="/staff/availability" element={<StaffAvailabilityPage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/feedback" element={<FeedbackPage />} />
-            <Route 
-              path="/admin" 
+            <Route
+              path="/admin"
               element={
                 <ProtectedRoute adminOnly>
                   <AdminPage />
                 </ProtectedRoute>
-              } 
+              }
             />
           </Routes>
+          <LoginModal
+            isOpen={showLogin}
+            onClose={() => setShowLogin(false)}
+            switchToSignup={() => { setShowLogin(false); setShowSignup(true); }}
+          />
+          <SignupModal
+            isOpen={showSignup}
+            onClose={() => setShowSignup(false)}
+            switchToLogin={() => { setShowSignup(false); setShowLogin(true); }}
+          />
         </div>
       </AuthProvider>
     </Router>

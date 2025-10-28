@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../App';
 import Navbar from '../components/Navbar';
 import ProfileMenu from '../components/ProfileMenu.jsx';
+import LoginModal from '../components/LoginModal.jsx';
+import SignupModal from '../components/SignupModal.jsx';
 import '../css/navbar.css';
 
 export default function FeedbackPage() {
@@ -14,6 +16,8 @@ export default function FeedbackPage() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [message, setMessage] = useState('');
   const [feedbackList, setFeedbackList] = useState([]);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState('dark-mode');
 
@@ -26,9 +30,9 @@ export default function FeedbackPage() {
     const newTheme = theme === 'dark-mode' ? 'light-mode' : 'dark-mode';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.body.className = newTheme; 
+    document.body.className = newTheme;
   };
-  
+
   useEffect(() => {
     loadFeedback();
   }, []);
@@ -96,7 +100,10 @@ export default function FeedbackPage() {
   return (
     <div className="dark-mode">
       <Navbar
-        onProfileClick={() => setShowProfileMenu(!showProfileMenu)}
+        onProfileClick={() => {
+          if (user) setShowProfileMenu(!showProfileMenu);
+          else setShowLogin(true);
+        }}
         user={user}
       />
       <main>
@@ -154,12 +161,30 @@ export default function FeedbackPage() {
         </section>
       </main>
       {showProfileMenu && (
-        <ProfileMenu 
+        <ProfileMenu
           onClose={() => setShowProfileMenu(false)}
           onToggleTheme={toggleTheme}
           theme={theme}
         />
       )}
+      
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        switchToSignup={() => {
+          setShowLogin(false);
+          setShowSignup(true);
+        }}
+      />
+
+      <SignupModal
+        isOpen={showSignup}
+        onClose={() => setShowSignup(false)}
+        switchToLogin={() => {
+          setShowSignup(false);
+          setShowLogin(true);
+        }}
+      />
     </div>
   );
 }

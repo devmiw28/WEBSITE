@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../App';
 
-function ForgotPasswordPage() {
+export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -162,12 +162,15 @@ function ForgotPasswordPage() {
 
         {statusMsg && <p className="status-msg">{statusMsg}</p>}
 
-        <p className="link" onClick={() => navigate('/login')}>
+        <p
+          className="link"
+          onClick={() => {
+            navigate('/', { state: { openLoginModal: true } });
+          }}
+        >
           Back to Login
         </p>
       </div>
     </div>
   );
 }
-
-export default ForgotPasswordPage;

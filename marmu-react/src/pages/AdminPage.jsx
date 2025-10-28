@@ -8,7 +8,7 @@ import AdminReplyModal from '../components/AdminReplyModal';
 import DashboardPanel from '../components/DashboardPanel';
 import StaffAvailabilityPage from '../pages/StaffAvailabilityPage';
 
-function AdminPage() {
+export default function AdminPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [activePanel, setActivePanel] = useState('dashboard');
@@ -386,5 +386,3 @@ function AdminPage() {
     </div>
   );
 }
-
-export default AdminPage;

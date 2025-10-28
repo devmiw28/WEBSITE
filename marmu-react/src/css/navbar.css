@@ -10,14 +10,14 @@
 }
 
 .nav-item {
-  color: white;
+  color: var(--gold);
   text-decoration: none;
   margin: 0 15px;
   font-weight: bold;
   transition: color 0.3s;
 }
 .nav-item:hover {
-  color: var(--gold);
+  color: antiquewhite;
 }
 
 .Logo {

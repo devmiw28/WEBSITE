@@ -1,16 +1,20 @@
-/* src/index.css */
+/* src/index.css - MAIN ENTRY POINT */
 
-/* ALL @import statements MUST come first */
+/* ============================================ */
+/* 1. IMPORT ALL STYLESHEETS IN CORRECT ORDER  */
+/* ============================================ */
+@import url('./css/navbar.css');
 @import url('./css/style.css');
 @import url('./css/services.css');
-@import url('./css/feedback.css');
 @import url('./css/admin.css');
+@import url('./css/authModal.css');
+@import url('./css/feedback.css');
 @import url('./css/forgot_password.css');
-@import url('./css/StaffAvailability.css');
-@import url('./css/navbar.css');
+@import url('./css/staffavailability.css');
 
-/* src/index.css */
-
+/* ============================================ */
+/* 2. CSS VARIABLES (ROOT LEVEL)               */
+/* ============================================ */
 :root {
   --bg: #121212;
   --card: #1b1b1b;
@@ -22,6 +26,9 @@
   --shadow: 0 4px 0 rgba(0,0,0,0.5);
 }
 
+/* ============================================ */
+/* 3. GLOBAL RESETS                            */
+/* ============================================ */
 * {
   box-sizing: border-box;
 }
@@ -40,74 +47,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-}
-
-/* Remove default Vite styles */
-body {
   display: block !important;
   place-items: unset !important;
 }
 
-/* ============================= */
-/* Navigation                     */
-/* ============================= */
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #0e0e0e;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid var(--gold);
-}
-
-.nav-left img.Logo {
-  height: 60px;
-}
-
-.nav-menu {
-  display: flex;
-  gap: 2rem;
-  align-items: center;
-}
-
-.nav-item {
-  color: var(--gold);
-  text-decoration: none;
-  font-size: 1.1rem;
-  transition: color 0.3s, transform 0.2s;
-  cursor: pointer;
-  opacity: 0.95;
-}
-
-.nav-item:hover {
-  color: #ffffff;
-  opacity: 1;
-  transform: translateY(-1px);
-}
-
-.profile-btn {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  border: 2px solid var(--gold);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 1.2rem;
-  color: var(--gold);
-  transition: all 0.3s;
-}
-
-.profile-btn:hover {
-  background: var(--gold);
-  color: #000;
-}
-
-/* ============================= */
-/* Profile Menu Sidebar           */
-/* ============================= */
+/* ============================================ */
+/* 4. PROFILE MENU SIDEBAR                     */
+/* ============================================ */
 .profile-menu-overlay {
   position: fixed;
   top: 0;
@@ -229,7 +175,7 @@ body {
   border-color: var(--gold);
 }
 
-.logout-btn {
+.profile-body .logout-btn {
   background: #dc3545 !important;
   border-color: #dc3545 !important;
   color: white !important;
@@ -237,13 +183,13 @@ body {
   margin-top: 20px !important;
 }
 
-.logout-btn:hover {
+.profile-body .logout-btn:hover {
   background: #c82333 !important;
 }
 
-/* ============================= */
-/* Banner / Hero                  */
-/* ============================= */
+/* ============================================ */
+/* 5. BANNER / HERO                            */
+/* ============================================ */
 .banner {
   text-align: center;
   padding: 60px 20px;
@@ -272,9 +218,9 @@ body {
   font-size: 1.2rem;
 }
 
-/* ============================= */
-/* Features Section               */
-/* ============================= */
+/* ============================================ */
+/* 6. FEATURES SECTION                         */
+/* ============================================ */
 .feature-section {
   max-width: 1200px;
   margin: 60px auto;
@@ -334,9 +280,9 @@ body {
   color: #000;
 }
 
-/* ============================= */
-/* Footer                         */
-/* ============================= */
+/* ============================================ */
+/* 7. FOOTER                                   */
+/* ============================================ */
 footer {
   background: #0e0e0e;
   text-align: center;
@@ -352,9 +298,9 @@ footer img.Logo {
   opacity: 0.8;
 }
 
-/* ============================= */
-/* Utilities                      */
-/* ============================= */
+/* ============================================ */
+/* 8. UTILITIES                                */
+/* ============================================ */
 .hidden {
   display: none !important;
 }
@@ -375,9 +321,9 @@ footer img.Logo {
   margin: 20px 0;
 }
 
-/* ============================= */
-/* Dark/Light Mode                */
-/* ============================= */
+/* ============================================ */
+/* 9. DARK/LIGHT MODE                          */
+/* ============================================ */
 body.dark-mode {
   background: var(--bg);
   color: var(--text);
@@ -392,26 +338,10 @@ body.light-mode {
   --muted: #666;
 }
 
-/* ============================= */
-/* Responsive Design              */
-/* ============================= */
+/* ============================================ */
+/* 10. RESPONSIVE DESIGN                       */
+/* ============================================ */
 @media (max-width: 768px) {
-  .navbar {
-    flex-wrap: wrap;
-    padding: 1rem;
-  }
-  
-  .nav-menu {
-    width: 100%;
-    justify-content: space-around;
-    margin-top: 10px;
-    gap: 1rem;
-  }
-  
-  .nav-item {
-    font-size: 0.95rem;
-  }
-  
   .feature {
     flex-direction: column !important;
   }
