@@ -113,15 +113,15 @@ export default function HomePage() {
 
         {/* Placeholder icons for social media, assuming you'll use Font Awesome */}
         <div className="social-icons">
-          <a href="#" aria-label="Instagram">(IG)</a>
-          <a href="#" aria-label="Facebook">(FB)</a>
-          <a href="mailto:example@gmail.com" aria-label="Email">(Mail)</a>
+          <a href="#" aria-label="Instagram"><img src="/assets/instagram.png" alt="Instagram" /></a>
+          <a href="#" aria-label="Facebook"><img src="/assets/facebook.png" alt="Facebook" /></a>
+          <a href="#" aria-label="Email"><img src="/assets/mail.png" alt="Mail" /></a>
         </div>
 
         <div className="footer-content">
           <div className="footer-column">
             <h4>Location</h4>
-            <p>766 Bernardino St<br />Mabolo, 4401<br />Naga City, Philippines</p>
+            <p>Nagbalon<br />Marilao, 3019<br />Bulacan, Philippines</p>
           </div>
           <div className="footer-column">
             <h4>Opening Time</h4>

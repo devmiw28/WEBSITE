@@ -308,7 +308,7 @@ footer h3 {
 .social-icons {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 30px;
   margin: 30px 0;
 }
 
@@ -321,6 +321,16 @@ footer h3 {
 
 .social-icons a:hover {
   color: #fff;
+}
+
+.social-icons a img {
+  width: 40px;
+  height: 40px;
+  transition: transform 0.3s ease;
+}
+
+.social-icons a:hover img {
+  transform: scale(1.5);
 }
 
 footer .copyright {
@@ -336,20 +346,20 @@ footer .copyright {
   .big-title {
     font-size: 2rem;
   }
-  
+
   .container.content {
     margin-top: -10vh;
     padding: 20px 10px;
   }
-  
+
   .split {
     flex-direction: column;
   }
-  
+
   .split:nth-child(2) {
     flex-direction: column-reverse;
   }
-  
+
   .gallery-small,
   .split-gallery {
     min-width: 100%;
