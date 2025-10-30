@@ -2,14 +2,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-const API_BASE_URL = 'http://127.0.0.1:5000';
+import ChangePasswordModal from './ChangePasswordModal';
+import { API_BASE_URL } from '../App';
 
 export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showChangePw, setShowChangePw] = useState(false);
 
   useEffect(() => {
     if (user?.username) {
@@ -19,13 +20,24 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
 
   const loadAppointments = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/appointments/${user.username}`);
-      const data = await response.json();
-      
+      const response = await fetch(`${API_BASE_URL}/api/appointments/${user.username}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const text = await response.text();
+      let data = [];
+      try {
+        data = text ? JSON.parse(text) : [];
+      } catch (e) {
+        throw new Error(`Unexpected response (${response.status}): ${text?.slice(0,120)}`);
+      }
+
       const upcoming = data
         .filter(apt => apt.status !== 'Cancelled')
         .slice(0, 5);
-      
+
       setAppointments(upcoming);
     } catch (error) {
       console.error('Error loading appointments:', error);
@@ -55,6 +67,9 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
           <p>Username: {user?.username || '-'}</p>
           <p>Email: {user?.email || '-'}</p>
           <hr />
+          <button onClick={() => setShowChangePw(true)} className="change-password-btn" style={{marginBottom: '10px'}}>
+            Change Password
+          </button>
           
           <h3>📅 Your Appointments</h3>
           <ul>
@@ -81,6 +96,7 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
           </button>
         </div>
       </div>
+      <ChangePasswordModal isOpen={showChangePw} onClose={() => setShowChangePw(false)} />
     </>
   );
 }

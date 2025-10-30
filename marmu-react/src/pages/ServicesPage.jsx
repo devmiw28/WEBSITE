@@ -7,6 +7,7 @@ import Navbar from '../components/Navbar';
 import ProfileMenu from '../components/ProfileMenu.jsx';
 import LoginModal from '../components/LoginModal.jsx';
 import SignupModal from '../components/SignupModal.jsx';
+import ForgotPasswordModal from '../components/ForgotPasswordModal.jsx';
 import '../css/services.css';
 
 export default function ServicesPage() {
@@ -22,6 +23,7 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [theme, setTheme] = useState('dark-mode');
+  const [showForgot, setShowForgot] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark-mode';
@@ -175,6 +177,10 @@ export default function ServicesPage() {
           setShowLogin(false);
           setShowSignup(true);
         }}
+        switchToForgot={() => {
+          setShowLogin(false);
+          setShowForgot(true);
+        }}
       />
 
       <SignupModal
@@ -184,6 +190,12 @@ export default function ServicesPage() {
           setShowSignup(false);
           setShowLogin(true);
         }}
+      />
+
+      <ForgotPasswordModal
+        isOpen={showForgot}
+        onClose={() => setShowForgot(false)}
+        switchToLogin={() => setShowLogin(true)}
       />
     </div>
   );

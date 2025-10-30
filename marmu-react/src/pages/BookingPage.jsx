@@ -40,7 +40,7 @@ export default function BookingPage() {
   // Fetch staff list when service changes
   useEffect(() => {
     if (formData.service) {
-      fetch(`${API_BASE_URL}/staff/${formData.service}`)
+      fetch(`${API_BASE_URL}/api/staff/${formData.service}`)
         .then(res => res.json())
         .then(setStaffList)
         .catch(err => console.error('Error fetching staff:', err));
@@ -52,7 +52,7 @@ export default function BookingPage() {
   // Fetch available times when date or staff changes
   useEffect(() => {
     if (formData.date && formData.staff_id) {
-      fetch(`${API_BASE_URL}/appointments/available_slots?date=${formData.date}&staff_id=${formData.staff_id}`)
+      fetch(`${API_BASE_URL}/api/appointments/available_slots?date=${formData.date}&staff_id=${formData.staff_id}`)
         .then(res => res.json())
         .then(data => setAvailableTimes(data.available_times || []))
         .catch(err => console.error('Error fetching slots:', err));

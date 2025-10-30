@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../App';
 
-export default function LoginModal({ isOpen, onClose, switchToSignup }) {
+export default function LoginModal({ isOpen, onClose, switchToSignup, switchToForgot }) {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -34,13 +34,21 @@ export default function LoginModal({ isOpen, onClose, switchToSignup }) {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
+      // Try to parse JSON; if it fails, surface raw text for debugging
+      let data;
+      const text = await response.text();
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(`Unexpected response (${response.status}): ${text?.slice(0,200) || 'empty body'}`);
+      }
       if (!response.ok) throw new Error(data.error || 'Login failed');
 
       login({
@@ -96,7 +104,13 @@ export default function LoginModal({ isOpen, onClose, switchToSignup }) {
             />
           </div>
 
-          <p className="login-modal-link" onClick={() => navigate('/forgot-password')}>
+          <p
+            className="login-modal-link"
+            onClick={() => {
+              onClose?.();
+              switchToForgot?.();
+            }}
+          >
             Forgot Password?
           </p>
 

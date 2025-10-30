@@ -42,13 +42,15 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE_URL}/signup/send_otp`, {
+      const res = await fetch(`${API_BASE_URL}/api/signup/send_otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch {}
+      if (!res.ok) throw new Error(data.error || `Failed to send OTP (${res.status})`);
 
       alert(data.message);
       setOtpSent(true);
@@ -71,16 +73,25 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
       setError('Passwords do not match');
       return;
     }
+    // Enforce same strength as change password: >=8 chars, includes letters and numbers
+    const hasLetter = /[A-Za-z]/.test(formData.password);
+    const hasNumber = /\d/.test(formData.password);
+    if (formData.password.length < 8 || !hasLetter || !hasNumber) {
+      setError('Password must be at least 8 characters and include letters and numbers');
+      return;
+    }
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/signup/verify`, {
+      const res = await fetch(`${API_BASE_URL}/api/signup/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Signup failed');
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch {}
+      if (!res.ok) throw new Error(data.error || `Signup failed (${res.status})`);
 
       alert(data.message);
       onClose();
@@ -139,6 +150,7 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              placeholder="At least 8 chars, letters & numbers"
             />
           </div>
 
@@ -147,6 +159,7 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
             <input
               type="password"
               name="confirm_password"
+              placeholder="Re-enter password"
               value={formData.confirm_password}
               onChange={handleChange}
             />

@@ -15,9 +15,10 @@ function AdminReplyModal({ feedback, onClose, onReplySent }) {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/feedback/${feedback.id}/reply`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/feedback/${feedback.id}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ reply: replyMessage, sendEmail }),
       });
 

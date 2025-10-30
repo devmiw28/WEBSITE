@@ -22,7 +22,7 @@ function AdminAddUserModal({ onClose, onUserAdded }) {
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/admin/add_user`, {
+            const response = await fetch(`${API_BASE_URL}/api/admin/add_user`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fullname, username, email, password, role }),

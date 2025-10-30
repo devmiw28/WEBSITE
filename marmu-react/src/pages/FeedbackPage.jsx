@@ -7,6 +7,7 @@ import Navbar from '../components/Navbar';
 import ProfileMenu from '../components/ProfileMenu.jsx';
 import LoginModal from '../components/LoginModal.jsx';
 import SignupModal from '../components/SignupModal.jsx';
+import ForgotPasswordModal from '../components/ForgotPasswordModal.jsx';
 import '../css/navbar.css';
 
 export default function FeedbackPage() {
@@ -20,6 +21,7 @@ export default function FeedbackPage() {
   const [showSignup, setShowSignup] = useState(false);
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState('dark-mode');
+  const [showForgot, setShowForgot] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark-mode';
@@ -39,8 +41,12 @@ export default function FeedbackPage() {
 
   const loadFeedback = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/feedback`);
-      const data = await response.json();
+      const response = await fetch(`${API_BASE_URL}/api/feedback`, { credentials: 'include' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      let data = [];
+      try { data = text ? JSON.parse(text) : []; }
+      catch (e) { throw new Error(`Unexpected response (${response.status}): ${text?.slice(0,120)}`); }
       setFeedbackList(data);
     } catch (error) {
       console.error('Error loading feedback:', error);
@@ -66,17 +72,20 @@ export default function FeedbackPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/feedback`, {
+      const response = await fetch(`${API_BASE_URL}/api/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           username: user.username,
           stars: selectedRating,
           message: message.trim()
         })
       });
-
-      const result = await response.json();
+      const text = await response.text();
+      let result = {};
+      try { result = text ? JSON.parse(text) : {}; }
+      catch (e) { throw new Error(`Unexpected response (${response.status}): ${text?.slice(0,120)}`); }
 
       if (response.ok) {
         alert('✅ ' + result.message);
@@ -175,6 +184,10 @@ export default function FeedbackPage() {
           setShowLogin(false);
           setShowSignup(true);
         }}
+        switchToForgot={() => {
+          setShowLogin(false);
+          setShowForgot(true);
+        }}
       />
 
       <SignupModal
@@ -184,6 +197,12 @@ export default function FeedbackPage() {
           setShowSignup(false);
           setShowLogin(true);
         }}
+      />
+
+      <ForgotPasswordModal
+        isOpen={showForgot}
+        onClose={() => setShowForgot(false)}
+        switchToLogin={() => setShowLogin(true)}
       />
     </div>
   );

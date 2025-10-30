@@ -43,8 +43,11 @@ export default function AdminPage() {
 
   const loadDashboardData = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/dashboard-data`);
-      const data = await res.json();
+      const res = await fetch(`${API_BASE_URL}/api/admin/dashboard-data`, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const _text0 = await res.text();
+      let data = {};
+      try { data = _text0 ? JSON.parse(_text0) : {}; } catch { throw new Error(`Unexpected response (${res.status})`); }
       setTotalClients(data.total_clients ?? 0);
       setNotifications(data.notifications ?? { pending_appointments: 0, new_feedback: 0 });
       setArtistPerformance(data.artist_performance ?? []);
@@ -58,8 +61,11 @@ export default function AdminPage() {
 
   const loadSummary = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/appointments/summary`);
-      const data = await res.json();
+      const res = await fetch(`${API_BASE_URL}/api/admin/appointments/summary`, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const _text1 = await res.text();
+      let data = {};
+      try { data = _text1 ? JSON.parse(_text1) : {}; } catch { throw new Error(`Unexpected response (${res.status})`); }
       setSummary(data);
     } catch (e) {
       console.error('Failed to load summary', e);
@@ -68,8 +74,11 @@ export default function AdminPage() {
 
   const loadMonthlyReport = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/appointments/monthly-report`);
-      const data = await res.json();
+      const res = await fetch(`${API_BASE_URL}/api/admin/appointments/monthly-report`, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const _text2 = await res.text();
+      let data = {};
+      try { data = _text2 ? JSON.parse(_text2) : {}; } catch { throw new Error(`Unexpected response (${res.status})`); }
       setMonthlyReport(data);
     } catch (e) {
       console.error('Failed to load monthly report', e);
@@ -79,8 +88,11 @@ export default function AdminPage() {
   const loadAppointments = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/appointments`);
-      const data = await response.json();
+      const response = await fetch(`${API_BASE_URL}/api/admin/appointments`, { credentials: 'include' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const _text3 = await response.text();
+      let data = [];
+      try { data = _text3 ? JSON.parse(_text3) : []; } catch { throw new Error(`Unexpected response (${response.status})`); }
       setAppointments(data);
     } catch (error) {
       console.error('Error loading appointments:', error);
@@ -91,9 +103,10 @@ export default function AdminPage() {
 
   const updateAppointmentStatus = async (id, status) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/appointments/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/appointments/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ status })
       });
 
@@ -109,8 +122,11 @@ export default function AdminPage() {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users`);
-      const data = await response.json();
+      const response = await fetch(`${API_BASE_URL}/api/admin/users`, { credentials: 'include' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const _text4 = await response.text();
+      let data = [];
+      try { data = _text4 ? JSON.parse(_text4) : []; } catch { throw new Error(`Unexpected response (${response.status})`); }
       setUsers(data);
     } catch (error) {
       console.error('Error loading users:', error);
@@ -122,8 +138,11 @@ export default function AdminPage() {
   const loadFeedback = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/feedback`);
-      const data = await response.json();
+      const response = await fetch(`${API_BASE_URL}/api/admin/feedback`, { credentials: 'include' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const _text5 = await response.text();
+      let data = [];
+      try { data = _text5 ? JSON.parse(_text5) : []; } catch { throw new Error(`Unexpected response (${response.status})`); }
       setFeedback(data);
     } catch (error) {
       console.error('Error loading feedback:', error);
@@ -134,9 +153,10 @@ export default function AdminPage() {
 
   const toggleResolved = async (id, resolved) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/feedback/${id}/resolve`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/feedback/${id}/resolve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ resolved })
       });
 

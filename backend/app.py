@@ -41,6 +41,16 @@ def hash_password(password):
 def is_valid_email(email):
     return re.match(r'^[a-zA-Z0-9._%+-]+@gmail\.com$', email)
 
+# Basic password strength check
+def is_strong_password(pw: str) -> bool:
+    if not pw or len(pw) < 8:
+        return False
+    if not re.search(r"[A-Za-z]", pw):
+        return False
+    if not re.search(r"\d", pw):
+        return False
+    return True
+
 # =====================================================
 # ✉️ Send OTP Email (Styled)
 # =====================================================
@@ -135,7 +145,7 @@ def send_feedback_reply_email(to_email, username, reply):
     except Exception as e:
         print(f"❌ Failed to send feedback reply email: {e}")
 
-def send_appointment_status_email(email, fullname, status, service=None, appointment_date=None, time=None):
+def send_appointment_status_email(email, fullname, status, service=None, appointment_date=None, time=None, artist_name=None):
     try:
         subject = f"Your Appointment has been {status}"
         
@@ -153,6 +163,7 @@ def send_appointment_status_email(email, fullname, status, service=None, appoint
 
                 <div style="background-color: #f8f9fa; padding: 15px 20px; border-radius: 6px; margin: 20px 0;">
                     <p style="margin: 5px 0;"><strong>Service:</strong> {service or 'N/A'}</p>
+                    <p style="margin: 5px 0;"><strong>Artist:</strong> {artist_name or 'N/A'}</p>
                     <p style="margin: 5px 0;"><strong>Date:</strong> {appointment_date or 'N/A'}</p>
                     <p style="margin: 5px 0;"><strong>Time:</strong> {time or 'N/A'}</p>
                 </div>
@@ -207,6 +218,7 @@ def serve_static(path):
 # FEEDBACK ENDPOINTS
 # =========================================
 @app.route("/feedback", methods=["GET"])
+@app.route("/api/feedback", methods=["GET"])
 def get_feedback():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -222,6 +234,7 @@ def get_feedback():
     return jsonify(feedback)
 
 @app.route("/feedback", methods=["POST"])
+@app.route("/api/feedback", methods=["POST"])
 def post_feedback():
     data = request.get_json()
     username, stars, message = data.get("username"), data.get("stars"), data.get("message")
@@ -288,7 +301,62 @@ def login():
     except mysql.connector.Error as err:
         return jsonify({"error": f"Database error: {err}"}), 500
     finally:
-        conn.close()
+        if 'conn' in locals() and conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+# =========================================
+# CHANGE PASSWORD (Authenticated)
+# =========================================
+@app.route('/change_password', methods=['POST'])
+@app.route('/api/change_password', methods=['POST'])
+def change_password():
+    if 'username' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+
+    data = request.get_json(silent=True) or {}
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+    confirm_password = data.get('confirm_password')
+
+    if not all([current_password, new_password, confirm_password]):
+        return jsonify({'success': False, 'message': 'All fields are required'}), 400
+    if new_password != confirm_password:
+        return jsonify({'success': False, 'message': 'Passwords do not match'}), 400
+    if not is_strong_password(new_password):
+        return jsonify({'success': False, 'message': 'Password must be at least 8 characters and include letters and numbers'}), 400
+
+    username = session['username']
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT hash_pass FROM tbl_users WHERE username=%s", (username,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+
+        if hash_password(current_password) != row['hash_pass']:
+            return jsonify({'success': False, 'message': 'Current password is incorrect'}), 403
+
+        if hash_password(new_password) == row['hash_pass']:
+            return jsonify({'success': False, 'message': 'New password must be different from the current password'}), 400
+
+        cursor.close()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE tbl_users SET hash_pass=%s WHERE username=%s",
+            (hash_password(new_password), username)
+        )
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Password updated successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error updating password: {str(e)}'}), 500
+    finally:
+        if conn:
+            conn.close()
 
 # =========================================
 # SIGNUP WITH OTP
@@ -426,6 +494,16 @@ def add_availability():
     conn = get_connection()
     cursor = conn.cursor()
 
+    # Clear any existing availability for this staff and date to prevent duplicates/overlaps
+    try:
+        cursor.execute(
+            "DELETE FROM tbl_staff_availability WHERE staff_id = %s AND available_date = %s",
+            (staff_id, available_date),
+        )
+    except Exception:
+        # Continue even if nothing to delete
+        pass
+
     for time in available_times:
         cursor.execute("""
             INSERT INTO tbl_staff_availability (staff_id, available_date, available_time)
@@ -461,6 +539,7 @@ def get_staff_by_service(service):
 
     return jsonify(staff), 200
 
+@app.route("/current_user")
 @app.route("/api/current_user")
 def current_user():
     if 'username' in session:
@@ -470,6 +549,7 @@ def current_user():
         })
     return jsonify({"error": "Not logged in"}), 401
 
+@app.route("/bookings", methods=["POST"])
 @app.route("/api/bookings", methods=["POST"])
 def create_booking():
     data = request.get_json()
@@ -557,13 +637,53 @@ def get_available_slots():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("""
+    # First, try to use explicit availability if present
+    cursor.execute(
+        """
         SELECT available_time FROM tbl_staff_availability
         WHERE staff_id = %s AND available_date = %s AND is_booked = FALSE
         ORDER BY available_time ASC
-    """, (staff_id, date))
+        """,
+        (staff_id, date),
+    )
+    rows = cursor.fetchall()
+    if rows:
+        available_times = [row["available_time"] for row in rows]
+        cursor.close()
+        conn.close()
+        return jsonify({"available_times": available_times})
 
-    available_times = [row["available_time"] for row in cursor.fetchall()]
+    # No explicit availability saved — derive from default schedule minus booked slots
+    # Determine weekday: 0=Monday .. 6=Sunday for MySQL DAYOFWEEK? We'll compute in Python
+    try:
+        dt = datetime.strptime(date, "%Y-%m-%d")
+        weekday = dt.weekday()  # 0=Mon .. 6=Sun
+    except Exception:
+        cursor.close()
+        conn.close()
+        return jsonify({"available_times": []})
+
+    # Sunday is unavailable by default
+    if weekday == 6:
+        cursor.close()
+        conn.close()
+        return jsonify({"available_times": []})
+
+    start_hour = 9
+    end_hour = 18 if weekday == 5 else 20  # Sat index=5
+    default_slots = [f"{h:02d}:00" for h in range(start_hour, end_hour)]
+
+    # Fetch currently booked times to exclude
+    cursor.execute(
+        """
+        SELECT time FROM tbl_appointment
+        WHERE appointment_date = %s AND artist_id = %s AND status != 'Cancelled'
+        """,
+        (date, staff_id),
+    )
+    booked = {row["time"] for row in cursor.fetchall()}
+
+    available_times = [t for t in default_slots if t not in booked]
 
     cursor.close()
     conn.close()
@@ -718,12 +838,14 @@ def get_appointments():
 
 @app.route("/admin/appointments/<int:id>", methods=["PUT"])
 def update_appointment(id):
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     new_status = data.get("status")
 
     if not new_status:
         return jsonify({"error": "Missing status field"}), 400
 
+    conn = None
+    cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -731,7 +853,8 @@ def update_appointment(id):
         cursor.execute("UPDATE tbl_appointment SET status = %s WHERE id = %s", (new_status, id))
         conn.commit()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT 
                 a.fullname, 
                 u.email, 
@@ -742,29 +865,38 @@ def update_appointment(id):
             FROM tbl_appointment a 
             JOIN tbl_users u ON a.user_id = u.id 
             WHERE a.id = %s
-        """, (id,))
+            """,
+            (id,),
+        )
         user = cursor.fetchone()
 
         if user and new_status.lower() in ("approved", "denied"):
             send_appointment_status_email(
-                to_email=user["email"],
+                email=user["email"],
                 fullname=user["fullname"],
                 status=new_status,
                 artist_name=user["artist_name"],
                 service=user["service"],
                 appointment_date=user["appointment_date"],
-                time=user["time"]
+                time=user["time"],
             )
 
-        cursor.close()
-        conn.close()
         return jsonify({"message": f"Appointment #{id} updated to {new_status}"}), 200
 
     except Exception as e:
+        print("Error in update_appointment:", e)
         return jsonify({"error": f"Internal server error: {e}"}), 500
     finally:
-        if conn:
-            conn.close()
+        try:
+            if cursor:
+                cursor.close()
+        except Exception:
+            pass
+        try:
+            if conn:
+                conn.close()
+        except Exception:
+            pass
 
 @app.route("/admin/users", methods=["GET"])
 def get_users():
@@ -921,6 +1053,7 @@ def serve_assets(filename):
     return send_from_directory(REACT_PUBLIC_PATH, filename)
 
 # ✅ Return list of tattoo + haircut images
+@app.route("/services/images", methods=["GET"])
 @app.route("/api/services/images", methods=["GET"])
 def get_service_images():
     tattoo_folder = os.path.join(REACT_PUBLIC_PATH, "tattoo_images")

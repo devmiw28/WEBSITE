@@ -1,5 +1,5 @@
 // pages/StaffAvailabilityPage.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { API_BASE_URL } from "../App";
 import { useAuth } from "../context/AuthContext";
 import "../css/staffavailability.css";
@@ -7,14 +7,14 @@ import "../css/staffavailability.css";
 export default function StaffAvailabilityPage() {
     const { user } = useAuth(); 
     const [date, setDate] = useState("");
-    const [selectedTimes, setSelectedTimes] = useState([]);
+    const [unavailableTimes, setUnavailableTimes] = useState([]);
     const [role, setRole] = useState(""); 
     const [staffList, setStaffList] = useState([]);
     const [selectedStaff, setSelectedStaff] = useState("");
 
     useEffect(() => {
         if (user.role === "Admin" && role) {
-            fetch(`${API_BASE_URL}/admin/staff?role=${role}`)
+            fetch(`${API_BASE_URL}/api/admin/staff?role=${role}`)
                 .then((res) => res.json())
                 .then((data) => setStaffList(data))
                 .catch((err) => console.error("Error loading staff:", err));
@@ -23,7 +23,7 @@ export default function StaffAvailabilityPage() {
 
 
     const handleToggleTime = (time) => {
-        setSelectedTimes((prev) =>
+        setUnavailableTimes((prev) =>
             prev.includes(time) ? prev.filter((t) => t !== time) : [...prev, time]
         );
     };
@@ -40,32 +40,56 @@ export default function StaffAvailabilityPage() {
             staffId = selectedStaff;
         }
 
-        if (!date || selectedTimes.length === 0) {
-            alert("Please select a date and at least one time slot.");
+        if (!date) {
+            alert("Please select a date.");
             return;
         }
 
-        const res = await fetch(`${API_BASE_URL}/staff/availability`, {
+        const defaults = computeDefaultSlots(date);
+        if (defaults.length === 0) {
+            alert("Sunday is unavailable by default. No availability to save.");
+            return;
+        }
+
+        const availableTimes = defaults.filter(t => !unavailableTimes.includes(t));
+        if (availableTimes.length === 0) {
+            alert("All default hours were marked unavailable; no availability to save for this date.");
+            return;
+        }
+
+        const res = await fetch(`${API_BASE_URL}/api/staff/availability`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 staff_id: staffId,
                 available_date: date,
-                available_times: selectedTimes,
+                available_times: availableTimes,
             }),
         });
 
-        const data = await res.json();
-        alert(data.message || "Error saving availability");
-        setSelectedTimes([]);
+        const text = await res.text();
+        let data = {};
+        try { data = text ? JSON.parse(text) : {}; } catch {}
+        alert(data.message || `Error saving availability (${res.status})`);
+        setUnavailableTimes([]);
         setDate("");
     };
 
-    const timeSlots = [
-        "09:00", "10:00", "11:00",
-        "13:00", "14:00", "15:00",
-        "16:00", "17:00"
-    ];
+    const computeDefaultSlots = (isoDate) => {
+        if (!isoDate) return [];
+        const d = new Date(isoDate + 'T00:00:00');
+        const day = d.getDay(); // 0 Sun .. 6 Sat (local)
+        if (day === 0) return [];
+        const endHour = day === 6 ? 18 : 20; // Sat 9-18, Mon-Fri 9-20
+        const slots = [];
+        for (let h = 9; h < endHour; h++) {
+            const hh = String(h).padStart(2, '0');
+            slots.push(`${hh}:00`);
+        }
+        return slots;
+    };
+
+    const timeSlots = useMemo(() => computeDefaultSlots(date), [date]);
 
     return (
         <div className="availability-page">
@@ -117,7 +141,7 @@ export default function StaffAvailabilityPage() {
                 {timeSlots.map((time) => (
                     <button
                         key={time}
-                        className={selectedTimes.includes(time) ? "selected" : ""}
+                        className={unavailableTimes.includes(time) ? "selected" : ""}
                         onClick={() => handleToggleTime(time)}
                     >
                         {time}
@@ -125,7 +149,14 @@ export default function StaffAvailabilityPage() {
                 ))}
             </div>
 
-            <button onClick={handleSave}>Save Availability</button>
+            {timeSlots.length === 0 ? (
+                <p className="availability-note">Sunday is unavailable by default.</p>
+            ) : (
+                <>
+                    <p className="availability-note">Default working hours are assumed. Click to mark UNAVAILABLE.</p>
+                    <button onClick={handleSave}>Save Unavailable Times</button>
+                </>
+            )}
         </div>
     );
 }

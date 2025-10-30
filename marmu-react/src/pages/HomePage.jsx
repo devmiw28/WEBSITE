@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar.jsx';
 import ProfileMenu from '../components/ProfileMenu.jsx';
 import LoginModal from '../components/LoginModal.jsx';
 import SignupModal from '../components/SignupModal.jsx';
+import ForgotPasswordModal from '../components/ForgotPasswordModal.jsx';
 import '../css/style.css';
 import '../css/navbar.css';
 import '../css/authModal.css';
@@ -17,6 +18,7 @@ export default function HomePage() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [theme, setTheme] = useState('dark-mode');
+  const [showForgot, setShowForgot] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark-mode';
@@ -147,6 +149,10 @@ export default function HomePage() {
           setShowLogin(false);
           setShowSignup(true);
         }}
+        switchToForgot={() => {
+          setShowLogin(false);
+          setShowForgot(true);
+        }}
       />
 
       <SignupModal
@@ -156,6 +162,12 @@ export default function HomePage() {
           setShowSignup(false);
           setShowLogin(true);
         }}
+      />
+
+      <ForgotPasswordModal
+        isOpen={showForgot}
+        onClose={() => setShowForgot(false)}
+        switchToLogin={() => setShowLogin(true)}
       />
     </div>
   );
