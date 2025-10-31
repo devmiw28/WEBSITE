@@ -42,8 +42,15 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('email');
   };
 
+  // Check whether current user has any of the provided roles (case-insensitive)
+  const hasAnyRole = (roles = []) => {
+    if (!user || !user.role) return false;
+    const cur = user.role.toLowerCase();
+    return roles.map(r => r.toLowerCase()).includes(cur);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, hasAnyRole }}>
       {children}
     </AuthContext.Provider>
   );

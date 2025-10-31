@@ -7,7 +7,8 @@ import { API_BASE_URL } from '../App';
 
 export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, hasAnyRole } = useAuth();
+  const isAdminOrStaff = hasAnyRole && hasAnyRole(['admin', 'barber', 'tattooartist']);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showChangePw, setShowChangePw] = useState(false);
@@ -91,6 +92,18 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
           <button onClick={onToggleTheme}>
             🌙 Toggle Theme
           </button>
+          {isAdminOrStaff && (
+            <button
+              onClick={() => {
+                onClose();
+                navigate('/admin');
+              }}
+              className="admin-dashboard-btn"
+              style={{ marginTop: '8px' }}
+            >
+              🛠️ Admin Dashboard
+            </button>
+          )}
           <button onClick={handleLogout} className="logout-btn">
             🚪 Logout
           </button>

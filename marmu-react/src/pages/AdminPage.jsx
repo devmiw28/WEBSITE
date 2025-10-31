@@ -10,7 +10,9 @@ import StaffAvailabilityPage from '../pages/StaffAvailabilityPage';
 
 export default function AdminPage() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout, hasAnyRole } = useAuth();
+  const isAdmin = hasAnyRole(['admin']);
+  const isStaff = hasAnyRole(['barber', 'tattooartist']);
   const [activePanel, setActivePanel] = useState('dashboard');
   const [appointments, setAppointments] = useState([]);
   const [users, setUsers] = useState([]);
@@ -93,7 +95,14 @@ export default function AdminPage() {
       const _text3 = await response.text();
       let data = [];
       try { data = _text3 ? JSON.parse(_text3) : []; } catch { throw new Error(`Unexpected response (${response.status})`); }
-      setAppointments(data);
+      // If the current user is staff (barber/tattooartist) but not an admin,
+      // only show appointments assigned to that staff member (artist_name === fullname).
+      if (isStaff && !isAdmin && user?.fullname) {
+        const filtered = data.filter(a => (a.artist_name || '').toLowerCase() === (user.fullname || '').toLowerCase());
+        setAppointments(filtered);
+      } else {
+        setAppointments(data);
+      }
     } catch (error) {
       console.error('Error loading appointments:', error);
     } finally {
@@ -182,7 +191,7 @@ export default function AdminPage() {
     <div className="dark-mode admin-container">
       {/* Sidebar */}
       <aside className="sidebar">
-        <h2>Admin Menu</h2>
+  <h2>Admin Menu</h2>
         <button
           className={`menu-btn ${activePanel === 'dashboard' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('dashboard')}
@@ -201,12 +210,14 @@ export default function AdminPage() {
         >
           📅 Manage Appointments
         </button>
-        <button
-          className={`menu-btn ${activePanel === 'users' ? 'active-menu-btn' : ''}`}
-          onClick={() => setActivePanel('users')}
-        >
-          👤 Manage Users
-        </button>
+        {isAdmin && (
+          <button
+            className={`menu-btn ${activePanel === 'users' ? 'active-menu-btn' : ''}`}
+            onClick={() => setActivePanel('users')}
+          >
+            👤 Manage Users
+          </button>
+        )}
         <button
           className={`menu-btn ${activePanel === 'feedback' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('feedback')}
@@ -271,20 +282,24 @@ export default function AdminPage() {
                       </td>
                       <td>
                         {apt.status === 'Pending' ? (
-                          <>
-                            <button
-                              className="action-btn approve"
-                              onClick={() => updateAppointmentStatus(apt.id, 'Approved')}
-                            >
-                              Approve
-                            </button>
-                            <button
-                              className="action-btn deny"
-                              onClick={() => updateAppointmentStatus(apt.id, 'Denied')}
-                            >
-                              Deny
-                            </button>
-                          </>
+                          isAdmin ? (
+                            <>
+                              <button
+                                className="action-btn approve"
+                                onClick={() => updateAppointmentStatus(apt.id, 'Approved')}
+                              >
+                                Approve
+                              </button>
+                              <button
+                                className="action-btn deny"
+                                onClick={() => updateAppointmentStatus(apt.id, 'Denied')}
+                              >
+                                Deny
+                              </button>
+                            </>
+                          ) : (
+                            <span>—</span>
+                          )
                         ) : (
                           <span>-</span>
                         )}
@@ -303,7 +318,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {activePanel === 'users' && (
+        {activePanel === 'users' && isAdmin && (
           <div>
             <h2>Manage Users</h2>
             <button

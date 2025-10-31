@@ -12,7 +12,7 @@ import '../css/navbar.css';
 
 export default function FeedbackPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasAnyRole } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [selectedRating, setSelectedRating] = useState(0);
   const [message, setMessage] = useState('');
@@ -61,6 +61,12 @@ export default function FeedbackPage() {
     if (!user) {
       alert('⚠️ Please log in first to submit feedback.');
       navigate('/login');
+      return;
+    }
+
+    // Admin and staff accounts should not submit feedback
+    if (hasAnyRole && hasAnyRole(['admin', 'barber', 'tattooartist'])) {
+      alert('⚠️ Admin and staff accounts cannot submit feedback.');
       return;
     }
 
@@ -122,7 +128,7 @@ export default function FeedbackPage() {
             {[1, 2, 3, 4, 5].map((star) => (
               <span
                 key={star}
-                onClick={() => handleStarClick(star)}
+                onClick={() => { if (!hasAnyRole || !hasAnyRole(['admin','barber','tattooartist'])) handleStarClick(star); }}
                 className={star <= selectedRating ? 'active' : ''}
                 style={{ cursor: 'pointer', fontSize: '2rem' }}
               >
@@ -136,15 +142,19 @@ export default function FeedbackPage() {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Write your feedback..."
             rows="5"
+            disabled={hasAnyRole && hasAnyRole(['admin','barber','tattooartist'])}
           />
 
           <button
             className="submit-btn"
             onClick={submitFeedback}
-            disabled={loading}
+            disabled={loading || (hasAnyRole && hasAnyRole(['admin','barber','tattooartist']))}
           >
             {loading ? 'Submitting...' : 'Submit Feedback'}
           </button>
+          {hasAnyRole && hasAnyRole(['admin','barber','tattooartist']) && (
+            <p style={{ color: '#e0a', marginTop: '8px' }}>Admin/staff accounts cannot submit feedback from here.</p>
+          )}
         </section>
 
         {/* Reviews List */}
