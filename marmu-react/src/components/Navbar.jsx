@@ -6,12 +6,8 @@ function Navbar({ onProfileClick }) {
   const { user } = useAuth();
 
   return (
-    <header className="navbar-hero">
-      {/* hero background moved here so navbar overlays the image */}
-      <div className="hero">
-        <div className="hero-overlay" />
-
-        <nav className="navbar">
+    <header className="site-header">
+      <nav className="navbar">
           <div className="nav-left">
             <img src="/assets/Logo.png" alt="Logo" className="Logo" />
           </div>
@@ -32,19 +28,6 @@ function Navbar({ onProfileClick }) {
             </button>
           </div>
         </nav>
-
-        {/* Hero overlay content (centered on image) */}
-        <div className="hero-content">
-          <div className="hero-inner">
-            <h1 className="big-title">Cuts that define confidence</h1>
-            <p className="sub">Confidence begins with a fresh cut. Our expert barbers craft the perfect style just for you.</p>
-            <div className="btn-row">
-              <button onClick={() => (user ? navigate('/book') : onProfileClick())} className="btn primary">Book Now</button>
-              <button onClick={() => navigate('/services?tab=tattoo')} className="btn outline">View Tattoo</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </header>
   );
 }

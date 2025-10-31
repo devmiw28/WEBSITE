@@ -32,25 +32,12 @@ body.light-mode .feature-text button:hover {
 ========================================================= */
 .home-page {
   position: relative;
+  margin-top: 300px;
 }
 
-.hero {
-  /* height is controlled for the header hero area; image is rendered via an <img> inside .hero-overlay
-     (keeps markup flexible if some pages choose the CSS background approach). */
-  height: 75vh;
-  position: relative;
-}
+.page { padding-top: 64px; }
 
-.hero-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* overlay color will be applied in navbar.css via ::after, keep this as fallback */
-  background-color: rgba(26, 26, 26, 0.55);
-  height: 100%;
-}
+/* Hero/banner removed — homepage uses normal page flow; header is fixed via navbar.css */
 
 .container.content {
   position: relative;
@@ -58,8 +45,8 @@ body.light-mode .feature-text button:hover {
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 20px;
-  /* pull the content up so it sits on the hero area */
-  margin-top: -30vh;
+  /* default spacing below the hero — homepage overrides if needed */
+  margin-top: 20px;
 }
 
 .big-title {

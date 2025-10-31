@@ -54,12 +54,19 @@ export default function HomePage() {
         user={user}
       />
 
-      {/* Hero Section is rendered by Navbar now */}
-      <section className="page home-page">
-        <div className="container content">
+      <section className="page home-page">        
 
-          {/* --- Section 1: Cuts that Define Confidence (Haircut focus) --- */}
+        <div className="container content">
           <div className="split">
+            <div className="split-text">
+              <h1 className="big-title">Cuts that define confidence</h1>
+              <p className="sub">Confidence begins with a fresh cut. Our expert barbers craft the perfect style just for you.</p>
+              <div className="btn-row">
+                <button onClick={handleBookNow} className="btn primary">Book Now</button>
+                <button onClick={handleExploreTattoos} className="btn outline">View Haircut</button>
+              </div>
+            </div>
+
             <div className="gallery-small">
               <img src="/assets/hair3.jpg" alt="Haircut Style 1" />
               <img src="/assets/Haircut_Sample.png" alt="Haircut Style 2" />
@@ -67,7 +74,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* --- Section 2: Art That Stays With You (Tattoo focus) --- */}
           <div className="split">
             <div className="split-gallery">
               <img src="/assets/tat1.jpg" alt="Tattoo Design 1" />
@@ -95,7 +101,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- Footer (Updated to match image) --- */}
       <footer>
         <h3>Marmu Barber & Tattoo Shop</h3>
 
