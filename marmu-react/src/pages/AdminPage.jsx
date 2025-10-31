@@ -239,48 +239,48 @@ export default function AdminPage() {
           className={`menu-btn ${activePanel === 'dashboard' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('dashboard')}
         >
-          📊 Dashboard
+          Dashboard
         </button>
         <button
           className={`menu-btn ${activePanel === 'availability' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('availability')}
         >
-          🕒 Staff Availability
+          Staff Availability
         </button>
         <button
           className={`menu-btn ${activePanel === 'appointments' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('appointments')}
         >
-          📅 Manage Appointments
+          Appointments
         </button>
         <button
           className={`menu-btn ${activePanel === 'history' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('history')}
         >
-          🗂️ Appointment History
+          Appointment History
         </button>
         {isAdmin && (
           <button
             className={`menu-btn ${activePanel === 'users' ? 'active-menu-btn' : ''}`}
             onClick={() => setActivePanel('users')}
           >
-            👤 Manage Users
+            Manage Users
           </button>
         )}
         <button
           className={`menu-btn ${activePanel === 'feedback' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('feedback')}
         >
-          ⭐ View Feedback
+          View Feedback
         </button>
         <button
           className="menu-btn"
           onClick={() => navigate('/')}
         >
-          🏠 Go to Main Window
+          Go to Main Window
         </button>
         <button className="logout-btn" onClick={handleLogout}>
-          🚫 Logout
+          Logout
         </button>
       </aside>
 
@@ -352,7 +352,6 @@ export default function AdminPage() {
                             <span>—</span>
                           )
                         ) : apt.status === 'Approved' ? (
-                          // If appointment is approved and its scheduled time has passed, allow admin to mark Complete or Abandoned
                           (() => {
                             try {
                               const aptDt = new Date(`${apt.appointment_date}T${apt.time}:00`);

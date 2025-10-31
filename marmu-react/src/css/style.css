@@ -203,6 +203,7 @@ body.light-mode .feature-text button:hover {
 .booking-container {
   max-width: 600px;
   margin: 40px auto;
+  margin-top: 300px;
   background: #222;
   padding: 30px;
   border-radius: 10px;

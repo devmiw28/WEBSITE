@@ -82,19 +82,18 @@ export default function ServicesPage() {
         user={user}
       />
 
-      {/* Tab Navigation */}
       <div className="tab-container">
         <button
           className={`tab-btn ${activeTab === 'tattoo' ? 'active' : ''}`}
           onClick={() => showTab('tattoo')}
         >
-          🎨 Tattoo Designs
+          Tattoo Designs
         </button>
         <button
           className={`tab-btn ${activeTab === 'haircut' ? 'active' : ''}`}
           onClick={() => showTab('haircut')}
         >
-          ✂️ Haircut Styles
+          Haircut Styles
         </button>
       </div>
 
@@ -153,7 +152,7 @@ export default function ServicesPage() {
           className="book-now-btn"
           onClick={() => navigate('/book')}
         >
-          📅 Book an Appointment Now
+          Book an Appointment Now
         </button>
       </div>
       {selectedImage && (

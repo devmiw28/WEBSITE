@@ -73,7 +73,7 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
             Change Password
           </button>
 
-          <h3>📅 Your Appointments</h3>
+          <h3>Your Appointments</h3>
           <ul>
             {loading ? (
               <li>Loading...</li>
@@ -134,7 +134,7 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
           </ul>
 
           <button onClick={onToggleTheme}>
-            🌙 Toggle Theme
+            Change Theme
           </button>
           {isAdminOrStaff && (
             <button
@@ -145,11 +145,11 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
               className="admin-dashboard-btn"
               style={{ marginTop: '8px' }}
             >
-              🛠️ Admin Dashboard
+              Admin Dashboard
             </button>
           )}
           <button onClick={handleLogout} className="logout-btn">
-            🚪 Logout
+            Logout
           </button>
         </div>
       </div>

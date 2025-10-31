@@ -4,6 +4,7 @@
 .tab-container {
   display: flex;
   justify-content: center;
+  margin-top: 300px;
   margin-bottom: 40px;
   padding-top: 20px;
   border-bottom: 1px solid #333;
