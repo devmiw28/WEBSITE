@@ -12,6 +12,7 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showChangePw, setShowChangePw] = useState(false);
+  const [cancellingIds, setCancellingIds] = useState({});
 
   useEffect(() => {
     if (user?.username) {
@@ -71,7 +72,7 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
           <button onClick={() => setShowChangePw(true)} className="change-password-btn" style={{marginBottom: '10px'}}>
             Change Password
           </button>
-          
+
           <h3>📅 Your Appointments</h3>
           <ul>
             {loading ? (
@@ -84,6 +85,49 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
                   <strong>{apt.service}</strong> - {apt.appointment_date} at {apt.time}
                   <br />
                   <small>Status: {apt.status}</small>
+                  <br />
+                  {/* Cancel button for upcoming appointments */}
+                  {(() => {
+                    try {
+                      const aptDt = new Date(`${apt.appointment_date}T${apt.time}:00`);
+                      const now = new Date();
+                      const cancellable = apt.status !== 'Cancelled' && apt.status !== 'Completed' && apt.status !== 'Abandoned' && apt.status !== 'Done' && aptDt > now;
+                      if (cancellable) {
+                        return (
+                          <button
+                            className="action-btn deny"
+                            onClick={async () => {
+                              if (!confirm('Cancel this appointment?')) return;
+                              setCancellingIds(prev => ({ ...prev, [apt.id]: true }));
+                              try {
+                                const res = await fetch(`${API_BASE_URL}/api/appointments/${apt.id}/cancel`, {
+                                  method: 'POST',
+                                  credentials: 'include'
+                                });
+                                if (res.ok) {
+                                  alert('✅ Appointment cancelled');
+                                  await loadAppointments();
+                                } else {
+                                  const t = await res.text();
+                                  alert('❌ Failed to cancel appointment: ' + t);
+                                }
+                              } catch (e) {
+                                alert('❌ Network error: ' + e.message);
+                              } finally {
+                                setCancellingIds(prev => ({ ...prev, [apt.id]: false }));
+                              }
+                            }}
+                            disabled={!!cancellingIds[apt.id]}
+                          >
+                            {cancellingIds[apt.id] ? 'Cancelling...' : 'Cancel'}
+                          </button>
+                        );
+                      }
+                    } catch (e) {
+                      return null;
+                    }
+                    return null;
+                  })()}
                 </li>
               ))
             )}

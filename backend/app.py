@@ -587,6 +587,16 @@ def create_booking():
         if cursor.fetchone():
             return jsonify({"error": "This time slot is already booked"}), 409
 
+        # Enforce booking limits: one haircut and one tattoo per user every 14 days
+        try:
+            cursor.execute("SELECT COUNT(*) FROM tbl_appointment WHERE user_id = %s AND service = %s AND appointment_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND status != 'Cancelled'", (user[0], service))
+            recent_count = cursor.fetchone()[0]
+            if recent_count and recent_count >= 1:
+                return jsonify({"error": f"You can only book one {service} every 2 weeks."}), 400
+        except Exception:
+            # If anything goes wrong with the check, continue (defensive)
+            pass
+
         # Insert appointment
         cursor.execute("""
             INSERT INTO tbl_appointment 
@@ -625,6 +635,63 @@ def get_user_appointments(username):
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+
+
+@app.route('/appointments/<int:appointment_id>/cancel', methods=['POST'])
+@app.route('/api/appointments/<int:appointment_id>/cancel', methods=['POST'])
+def cancel_appointment(appointment_id):
+    # Allow logged-in user to cancel their own appointment
+    if 'username' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    username = session['username']
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Verify the appointment belongs to the logged-in user
+        cursor.execute("SELECT * FROM tbl_appointment WHERE id = %s", (appointment_id,))
+        apt = cursor.fetchone()
+        if not apt:
+            return jsonify({'error': 'Appointment not found'}), 404
+
+        cursor.execute("SELECT id FROM tbl_users WHERE username = %s", (username,))
+        user_row = cursor.fetchone()
+        if not user_row or apt['user_id'] != user_row['id']:
+            return jsonify({'error': 'Not authorized to cancel this appointment'}), 403
+
+        # Only allow cancellation if appointment is not already in a terminal state
+        if apt['status'] in ('Cancelled', 'Completed', 'Abandoned', 'Done'):
+            return jsonify({'error': 'Appointment cannot be cancelled'}), 400
+
+        # Update appointment status to Cancelled
+        cursor.execute("UPDATE tbl_appointment SET status = 'Cancelled' WHERE id = %s", (appointment_id,))
+
+        # Free up the availability slot if applicable
+        try:
+            cursor.execute("UPDATE tbl_staff_availability SET is_booked = FALSE WHERE staff_id = %s AND available_date = %s AND available_time = %s", (apt['artist_id'], apt['appointment_date'], apt['time']))
+        except Exception:
+            pass
+
+        conn.commit()
+
+        # Optionally send notification email
+        try:
+            cursor.execute("SELECT email, fullname FROM tbl_users WHERE id = %s", (apt['user_id'],))
+            u = cursor.fetchone()
+            if u and u.get('email'):
+                send_appointment_status_email(email=u['email'], fullname=u['fullname'], status='Cancelled', service=apt.get('service'), appointment_date=apt.get('appointment_date'), time=apt.get('time'), artist_name=apt.get('artist_name'))
+        except Exception:
+            pass
+
+        return jsonify({'message': 'Appointment cancelled'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 @app.route("/appointments/available_slots", methods=["GET"])
 def get_available_slots():

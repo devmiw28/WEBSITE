@@ -54,26 +54,12 @@ export default function HomePage() {
         user={user}
       />
 
-      {/* Hero Section */}
+      {/* Hero Section is rendered by Navbar now */}
       <section className="page home-page">
-        {/* Note: The hero background image requires the file at /assets/hero-background.jpg */}
-        <div className="hero">
-          <div className="hero-overlay"></div>
-        </div>
-
         <div className="container content">
 
           {/* --- Section 1: Cuts that Define Confidence (Haircut focus) --- */}
           <div className="split">
-            <div className="hero-text">
-              <h1 className="big-title">Cuts that define confidence</h1>
-              <p className="sub">Confidence begins with a fresh cut. Our expert barbers craft the perfect style just for you.</p>
-              <div className="btn-row">
-                <button onClick={handleBookNow} className="btn primary">Book Now</button>
-                <button onClick={handleExploreTattoos} className="btn outline">View Tattoo</button>
-              </div>
-            </div>
-
             <div className="gallery-small">
               <img src="/assets/hair3.jpg" alt="Haircut Style 1" />
               <img src="/assets/Haircut_Sample.png" alt="Haircut Style 2" />

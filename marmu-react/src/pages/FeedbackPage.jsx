@@ -20,6 +20,7 @@ export default function FeedbackPage() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [theme, setTheme] = useState('dark-mode');
   const [showForgot, setShowForgot] = useState(false);
 
@@ -75,7 +76,7 @@ export default function FeedbackPage() {
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/feedback`, {
@@ -104,7 +105,7 @@ export default function FeedbackPage() {
     } catch (error) {
       alert('⚠️ Network error: ' + error.message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -128,9 +129,9 @@ export default function FeedbackPage() {
             {[1, 2, 3, 4, 5].map((star) => (
               <span
                 key={star}
-                onClick={() => { if (!hasAnyRole || !hasAnyRole(['admin','barber','tattooartist'])) handleStarClick(star); }}
+                onClick={() => { if (!submitting && (!hasAnyRole || !hasAnyRole(['admin','barber','tattooartist']))) handleStarClick(star); }}
                 className={star <= selectedRating ? 'active' : ''}
-                style={{ cursor: 'pointer', fontSize: '2rem' }}
+                style={{ cursor: submitting ? 'not-allowed' : 'pointer', fontSize: '2rem' }}
               >
                 {star <= selectedRating ? '★' : '☆'}
               </span>
@@ -142,15 +143,15 @@ export default function FeedbackPage() {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Write your feedback..."
             rows="5"
-            disabled={hasAnyRole && hasAnyRole(['admin','barber','tattooartist'])}
+            disabled={submitting || (hasAnyRole && hasAnyRole(['admin','barber','tattooartist']))}
           />
 
           <button
             className="submit-btn"
             onClick={submitFeedback}
-            disabled={loading || (hasAnyRole && hasAnyRole(['admin','barber','tattooartist']))}
+            disabled={submitting || (hasAnyRole && hasAnyRole(['admin','barber','tattooartist']))}
           >
-            {loading ? 'Submitting...' : 'Submit Feedback'}
+            {submitting ? 'Submitting...' : 'Submit Feedback'}
           </button>
           {hasAnyRole && hasAnyRole(['admin','barber','tattooartist']) && (
             <p style={{ color: '#e0a', marginTop: '8px' }}>Admin/staff accounts cannot submit feedback from here.</p>

@@ -5,19 +5,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #222;
+  /* navbar will be positioned over the hero image; keep transparent here */
+  background: transparent;
   padding: 10px 20px;
 }
 
 .nav-item {
-  color: var(--gold);
+  color: #fff;
   text-decoration: none;
   margin: 0 15px;
   font-weight: bold;
   transition: color 0.3s;
 }
 .nav-item:hover {
-  color: antiquewhite;
+  color: var(--gold);
 }
 
 .Logo {
@@ -37,4 +38,104 @@
 .home-btn {
   font-size: 1.8em;
   margin-right: 20px;
+}
+
+/* =========================================================
+   NAVBAR + HERO LAYOUT
+   The hero image is rendered inside .hero/.hero-overlay in the
+   Navbar component. These rules make the image fill the area,
+   add a semi-transparent dark overlay, and position the nav
+   above everything.
+========================================================= */
+.navbar-hero .hero {
+  height: 75vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.navbar-hero .hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+}
+
+
+/* Use CSS background-image on .hero instead of an <img> element */
+.navbar-hero .hero {
+  background-image: url('/assets/hero-background.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.navbar-hero .hero-overlay::after {
+  /* dark overlay over the image */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(26, 26, 26, 0.55);
+  z-index: 1;
+}
+
+.navbar-hero .navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2; /* above image/overlay */
+  background: transparent;
+  padding: 18px 30px;
+}
+
+/* Hero content centered overlay */
+.hero-content {
+  position: absolute;
+  inset: 0; /* fill the hero area */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3; /* above overlay and nav */
+  pointer-events: none; /* allow clicks to pass to nav unless on buttons */
+}
+
+.hero-inner {
+  pointer-events: auto; /* enable interaction for buttons inside */
+  max-width: 1100px;
+  padding: 20px;
+  text-align: center;
+  color: #fff;
+}
+
+.hero-inner .big-title {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  color: var(--gold);
+}
+
+.hero-inner .sub {
+  font-size: 1.05rem;
+  color: #e6e6e6;
+  margin-bottom: 20px;
+}
+
+.hero-inner .btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .navbar-hero .hero { height: 60vh; }
+  .hero-inner .big-title { font-size: 2rem; }
+  .hero-inner .sub { font-size: 0.95rem; }
+  .container.content { margin-top: -20vh; }
+}
+
+@media (max-width: 480px) {
+  .navbar-hero .hero { height: 50vh; }
+  .hero-inner { padding: 10px; }
+  .hero-inner .big-title { font-size: 1.6rem; }
+  .hero-inner .btn-row { flex-direction: column; }
 }

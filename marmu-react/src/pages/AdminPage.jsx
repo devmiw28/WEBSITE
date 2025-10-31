@@ -15,6 +15,9 @@ export default function AdminPage() {
   const isStaff = hasAnyRole(['barber', 'tattooartist']);
   const [activePanel, setActivePanel] = useState('dashboard');
   const [appointments, setAppointments] = useState([]);
+  const [historyAppointments, setHistoryAppointments] = useState([]);
+  const [pendingActions, setPendingActions] = useState({});
+  const [pendingFeedbackIds, setPendingFeedbackIds] = useState({});
   const [users, setUsers] = useState([]);
   const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -37,9 +40,37 @@ export default function AdminPage() {
     if (activePanel === 'appointments') loadAppointments();
     else if (activePanel === 'users') loadUsers();
     else if (activePanel === 'feedback') loadFeedback();
+    else if (activePanel === 'history') loadHistory();
     else if (activePanel === 'dashboard') {
       loadSummary();
       loadMonthlyReport();
+      }
+  };
+
+  const loadHistory = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/appointments`, { credentials: 'include' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      let data = [];
+      try { data = text ? JSON.parse(text) : []; } catch { throw new Error(`Unexpected response (${response.status})`); }
+
+      const history = data.filter(a => {
+        const s = (a.status || '').toLowerCase();
+        return s === 'completed' || s === 'abandoned' || s === 'done';
+      });
+
+      // Staff should only see their own history
+      if (isStaff && !isAdmin && user?.fullname) {
+        setHistoryAppointments(history.filter(a => (a.artist_name || '').toLowerCase() === (user.fullname || '').toLowerCase()));
+      } else {
+        setHistoryAppointments(history);
+      }
+    } catch (err) {
+      console.error('Error loading history:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,6 +142,7 @@ export default function AdminPage() {
   };
 
   const updateAppointmentStatus = async (id, status) => {
+    setPendingActions(prev => ({ ...prev, [id]: true }));
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/appointments/${id}`, {
         method: 'PUT',
@@ -121,10 +153,15 @@ export default function AdminPage() {
 
       if (response.ok) {
         alert(`✅ Appointment #${id} marked as ${status}`);
-        loadAppointments();
+        await loadAppointments();
+      } else {
+        const t = await response.text();
+        alert(`⚠️ Error: ${t}`);
       }
     } catch (error) {
       alert(`⚠️ Error: ${error.message}`);
+    } finally {
+      setPendingActions(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -161,6 +198,7 @@ export default function AdminPage() {
   };
 
   const toggleResolved = async (id, resolved) => {
+    setPendingFeedbackIds(prev => ({ ...prev, [id]: true }));
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/feedback/${id}/resolve`, {
         method: 'POST',
@@ -171,10 +209,15 @@ export default function AdminPage() {
 
       if (response.ok) {
         alert(`Feedback ${resolved ? 'marked as resolved' : 'set to pending'}.`);
-        loadFeedback();
+        await loadFeedback();
+      } else {
+        const t = await response.text();
+        alert(`Request failed: ${t}`);
       }
     } catch (error) {
       alert(`Request failed: ${error.message}`);
+    } finally {
+      setPendingFeedbackIds(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -209,6 +252,12 @@ export default function AdminPage() {
           onClick={() => setActivePanel('appointments')}
         >
           📅 Manage Appointments
+        </button>
+        <button
+          className={`menu-btn ${activePanel === 'history' ? 'active-menu-btn' : ''}`}
+          onClick={() => setActivePanel('history')}
+        >
+          🗂️ Appointment History
         </button>
         {isAdmin && (
           <button
@@ -287,19 +336,40 @@ export default function AdminPage() {
                               <button
                                 className="action-btn approve"
                                 onClick={() => updateAppointmentStatus(apt.id, 'Approved')}
+                                disabled={!!pendingActions[apt.id]}
                               >
-                                Approve
+                                {pendingActions[apt.id] ? 'Processing...' : 'Approve'}
                               </button>
                               <button
                                 className="action-btn deny"
                                 onClick={() => updateAppointmentStatus(apt.id, 'Denied')}
+                                disabled={!!pendingActions[apt.id]}
                               >
-                                Deny
+                                {pendingActions[apt.id] ? 'Processing...' : 'Deny'}
                               </button>
                             </>
                           ) : (
                             <span>—</span>
                           )
+                        ) : apt.status === 'Approved' ? (
+                          // If appointment is approved and its scheduled time has passed, allow admin to mark Complete or Abandoned
+                          (() => {
+                            try {
+                              const aptDt = new Date(`${apt.appointment_date}T${apt.time}:00`);
+                              const now = new Date();
+                              if (isAdmin && aptDt <= now) {
+                                return (
+                                  <>
+                                    <button className="action-btn approve" onClick={() => updateAppointmentStatus(apt.id, 'Completed')} disabled={!!pendingActions[apt.id]}>{pendingActions[apt.id] ? 'Processing...' : 'Mark Complete'}</button>
+                                    <button className="action-btn deny" onClick={() => updateAppointmentStatus(apt.id, 'Abandoned')} disabled={!!pendingActions[apt.id]}>{pendingActions[apt.id] ? 'Processing...' : 'Mark Abandoned'}</button>
+                                  </>
+                                );
+                              }
+                            } catch (e) {
+                              // ignore
+                            }
+                            return <span>-</span>;
+                          })()
                         ) : (
                           <span>-</span>
                         )}
@@ -315,6 +385,42 @@ export default function AdminPage() {
         {activePanel === 'availability' && (
           <div className="panel-container">
             <StaffAvailabilityPage />
+          </div>
+        )}
+
+        {activePanel === 'history' && (
+          <div>
+            <h2>Appointment History</h2>
+            {loading ? (
+              <p>Loading...</p>
+            ) : (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Service</th>
+                    <th>Artist</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historyAppointments.map((apt) => (
+                    <tr key={apt.id}>
+                      <td>{apt.id}</td>
+                      <td>{apt.fullname}</td>
+                      <td>{apt.service}</td>
+                      <td>{apt.artist_name}</td>
+                      <td>{apt.appointment_date}</td>
+                      <td>{apt.time}</td>
+                      <td className={`status ${apt.status.toLowerCase()}`}>{apt.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 
@@ -392,8 +498,9 @@ export default function AdminPage() {
                         <button
                           className="action-btn resolve"
                           onClick={() => toggleResolved(f.id, !f.resolved)}
+                          disabled={!!pendingFeedbackIds[f.id]}
                         >
-                          {f.resolved ? '❌ Unresolve' : '✅ Resolve'}
+                          {pendingFeedbackIds[f.id] ? 'Processing...' : (f.resolved ? '❌ Unresolve' : '✅ Resolve')}
                         </button>
                       </td>
                     </tr>
