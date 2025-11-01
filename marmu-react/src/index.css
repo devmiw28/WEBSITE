@@ -3,27 +3,27 @@
 /* ============================================ */
 /* 1. IMPORT ALL STYLESHEETS IN CORRECT ORDER  */
 /* ============================================ */
-@import url('./css/navbar.css');
-@import url('./css/style.css');
-@import url('./css/services.css');
-@import url('./css/admin.css');
-@import url('./css/authModal.css');
-@import url('./css/feedback.css');
-@import url('./css/forgot_password.css');
-@import url('./css/staffavailability.css');
+@import url("./css/navbar.css");
+@import url("./css/style.css");
+@import url("./css/services.css");
+@import url("./css/admin.css");
+@import url("./css/authModal.css");
+@import url("./css/feedback.css");
+@import url("./css/forgot_password.css");
+@import url("./css/staffavailability.css");
 
 /* ============================================ */
 /* 2. CSS VARIABLES (ROOT LEVEL)               */
 /* ============================================ */
 :root {
+  --border-width: 1px;
   --bg: #121212;
+  --text: #e9e6e3;
   --card: #1b1b1b;
   --muted: #8c8c8c;
   --gold: #c39a6b;
-  --text: #e9e6e3;
-  --accent-dark: rgba(195,154,107,0.08);
-  --border: rgba(195,154,107,0.25);
-  --shadow: 0 4px 0 rgba(0,0,0,0.5);
+  --border: rgba(195, 154, 107, 0.25);
+  --shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
 }
 
 /* ============================================ */
@@ -33,22 +33,28 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
 body {
-  margin: 0;
-  font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif;
   background: var(--bg);
   color: var(--text);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.6;
-  display: block !important;
-  place-items: unset !important;
+  text-rendering: optimizeLegibility;
+}
+
+html, body, * {
+  font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* ============================================ */
@@ -101,7 +107,7 @@ body {
 
 .profile-header button {
   background: transparent;
-  border: 1px solid var(--border);
+  border: var(--border-width) solid var(--border);
   color: var(--gold);
   font-size: 1.5rem;
   cursor: pointer;
@@ -159,7 +165,7 @@ body {
   width: 100%;
   padding: 12px;
   margin: 8px 0;
-  border: 1px solid var(--border);
+  border: var(--border-width) solid var(--border);
   background: transparent;
   color: var(--text);
   font-size: 1rem;
@@ -167,12 +173,14 @@ body {
   border-radius: 6px;
   transition: all 0.3s;
   font-family: inherit;
+  font-weight: 500;
 }
 
 .profile-body button:hover {
   background: var(--gold);
   color: #000;
   border-color: var(--gold);
+  font-weight: 500;
 }
 
 .profile-body .logout-btn {
@@ -191,17 +199,14 @@ body {
 /* 5. BANNER / HERO                            */
 /* ============================================ */
 .banner {
-  text-align: center;
-  padding: 60px 20px;
-  background: linear-gradient(135deg, #0e0e0e 0%, #1a1a1a 100%);
-  border-bottom: 2px solid var(--gold);
+  background: linear-gradient(135deg, var(--card), var(--bg));
 }
 
 .banner-img {
   width: 200px;
   height: auto;
   margin-bottom: 20px;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
 }
 
 .banner h1 {
@@ -241,7 +246,7 @@ body {
 .feature img {
   width: 45%;
   border-radius: 8px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   border: 2px solid var(--border);
 }
 
@@ -284,12 +289,7 @@ body {
 /* 7. FOOTER                                   */
 /* ============================================ */
 footer {
-  background: #0e0e0e;
-  text-align: center;
-  padding: 30px 20px;
-  border-top: 1px solid var(--gold);
-  color: var(--muted);
-  margin-top: 60px;
+  background: var(--card);
 }
 
 footer img.Logo {
@@ -330,12 +330,85 @@ body.dark-mode {
 }
 
 body.light-mode {
-  background: #f7f7f7;
-  color: #111;
   --bg: #f7f7f7;
   --card: #ffffff;
   --text: #111;
   --muted: #666;
+  --border: rgba(0, 0, 0, 0.1);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+body.light-mode .banner {
+  background: linear-gradient(135deg, #ffffff, #f0f0f0);
+}
+
+/* ============================================ */
+/* LIGHT MODE FIXES - PROFILE SIDEBAR           */
+/* ============================================ */
+body.light-mode .profile-menu {
+  background: linear-gradient(180deg, #ffffff, #f2f2f2);
+  border-left: 2px solid var(--gold);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.25);
+}
+
+body.light-mode .profile-header {
+  border-bottom: 1px solid var(--border);
+}
+
+body.light-mode .profile-header h2 {
+  color: var(--gold);
+}
+
+body.light-mode .profile-header button {
+  border-color: var(--border);
+  color: var(--gold);
+}
+
+body.light-mode .profile-header button:hover {
+  background: var(--gold);
+  color: #fff;
+}
+
+body.light-mode .profile-body {
+  color: #222;
+}
+
+body.light-mode .profile-body p {
+  color: var(--muted);
+}
+
+body.light-mode .profile-body p strong {
+  color: var(--gold);
+}
+
+body.light-mode .profile-body ul li {
+  background: #fff;
+  border-left: 3px solid var(--gold);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .profile-body button {
+  background: #fff;
+  border: 1px solid var(--border);
+  color: #111;
+}
+
+body.light-mode .profile-body button:hover {
+  background: var(--gold);
+  color: #fff;
+  border-color: var(--gold);
+}
+
+body.light-mode .profile-body .logout-btn {
+  background: #dc3545 !important;
+  color: #fff !important;
+  border-color: #dc3545 !important;
+}
+
+body.light-mode .profile-body .logout-btn:hover {
+  background: #c82333 !important;
 }
 
 /* ============================================ */
@@ -345,16 +418,16 @@ body.light-mode {
   .feature {
     flex-direction: column !important;
   }
-  
+
   .feature img,
   .feature-text {
     width: 100%;
   }
-  
+
   .banner h1 {
     font-size: 2rem;
   }
-  
+
   .profile-menu {
     width: 100%;
     right: -100%;

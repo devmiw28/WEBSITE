@@ -7,13 +7,13 @@
   margin-top: 300px;
   margin-bottom: 40px;
   padding-top: 20px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--border);
 }
 
 .tab-btn {
   background: none;
   border: none;
-  color: #a0a0a0;
+  color: var(--muted);
   padding: 15px 30px;
   font-size: 1.1rem;
   font-weight: bold;
@@ -25,12 +25,12 @@
 }
 
 .tab-btn:hover {
-  color: #ffffff;
+  color: var(--text);
 }
 
 .tab-btn.active {
-  color: #ae8f6f;
-  border-bottom: 3px solid #ae8f6f;
+  color: var(--gold);
+  border-bottom: 3px solid var(--gold);
 }
 
 /* ================================
@@ -45,7 +45,7 @@
 /* Override inline styles from JSX */
 .gallery-container h2 {
   text-align: center;
-  color: #ae8f6f !important;
+  color: var(--gold) !important;
   margin-bottom: 30px !important;
   font-family: 'Georgia', serif;
   font-size: 2rem;
@@ -63,8 +63,8 @@
    Gallery Card Styling
 ================================ */
 .gallery-card {
-  background-color: #252525;
-  border: 1px solid #333;
+  background-color: var(--card);
+  border: 1px solid var(--border);
   text-align: center;
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -93,7 +93,7 @@
 .gallery-card h3 {
   padding: 20px 15px;
   margin: 0;
-  color: #ae8f6f;
+  color: var(--gold);
   font-family: 'Georgia', serif;
   text-transform: uppercase;
   font-size: 1rem;
@@ -155,13 +155,13 @@
   max-width: 800px;
   margin: 60px auto;
   padding: 40px;
-  background-color: #222;
-  border: 1px solid #333;
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
 .price-list-container h2 {
-  color: #ae8f6f;
+  color: var(--gold);
   font-family: 'Georgia', serif;
   text-transform: uppercase;
   font-size: 1.8rem;
@@ -176,14 +176,14 @@
 
 .price-list-item {
   font-size: 1.2rem;
-  color: #e0e0e0;
+  color: var(--text);
   margin: 15px 0;
   font-family: 'Georgia', serif;
   letter-spacing: 1px;
 }
 
 .price-list-item span {
-  color: #ae8f6f;
+  color: var(--gold);
   font-weight: bold;
   margin-left: 10px;
 }
@@ -194,7 +194,7 @@
 .book-now-section {
   text-align: center;
   padding: 40px 20px;
-  background-color: #111;
+  background-color: var(--bg);
   margin-top: 50px;
 }
 
@@ -229,7 +229,7 @@
 .no-items {
   text-align: center;
   font-size: 1.2rem;
-  color: #888;
+  color: var(--muted);
   padding: 60px 20px;
   font-style: italic;
 }

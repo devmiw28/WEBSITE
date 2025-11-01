@@ -28,6 +28,7 @@ export default function ServicesPage() {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark-mode';
     setTheme(savedTheme);
+    document.body.className = savedTheme;
   }, []);
 
   const toggleTheme = () => {
@@ -73,7 +74,7 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="dark-mode">
+    <div className={theme}>
       <Navbar
         onProfileClick={() => {
           if (user) setShowProfileMenu(!showProfileMenu);

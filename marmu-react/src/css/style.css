@@ -1,33 +1,4 @@
 /* =========================================================
-   STYLE.CSS - Homepage and General Page Styles
-   (Navbar styles moved to navbar.css)
-========================================================= */
-
-/* =========================================================
-   DARK/LIGHT MODE BASE
-========================================================= */
-.dark-mode {
-  background-color: #1a1a1a;
-  color: #e0e0e0;
-  font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif;
-}
-
-body.light-mode {
-  background-color: #f4f4f4;
-  color: #222;
-}
-
-body.light-mode .feature-text button {
-  background: #e0e0e0;
-  color: #111;
-}
-
-body.light-mode .feature-text button:hover {
-  background: var(--gold);
-  color: white;
-}
-
-/* =========================================================
    HERO & HOME PAGE SECTIONS
 ========================================================= */
 .home-page {
@@ -50,7 +21,7 @@ body.light-mode .feature-text button:hover {
 }
 
 .big-title {
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: 'Georgia', serif;
   font-size: 2.8rem;
   font-weight: bold;
   color: var(--gold);
@@ -61,7 +32,7 @@ body.light-mode .feature-text button:hover {
 
 .sub {
   font-size: 1.1rem;
-  color: #c0c0c0;
+  color: var(--muted);
   margin: 20px 0 30px;
   max-width: 500px;
   line-height: 1.6;
@@ -118,7 +89,7 @@ body.light-mode .feature-text button:hover {
   height: 100%;
   object-fit: cover;
   filter: grayscale(100%);
-  border: 1px solid #333;
+  border: 1px solid var(--border);
 }
 
 .split-gallery {
@@ -149,10 +120,10 @@ body.light-mode .feature-text button:hover {
   text-align: center;
   cursor: pointer;
   border: none;
+  background-color: #ae8f6f;
 }
 
 .btn.primary {
-  background-color: var(--gold);
   color: #1a1a1a;
   border: 2px solid var(--gold);
 }
@@ -169,7 +140,6 @@ body.light-mode .feature-text button:hover {
 }
 
 .btn.outline:hover {
-  background-color: var(--gold);
   color: #1a1a1a;
 }
 
@@ -185,13 +155,12 @@ body.light-mode .feature-text button:hover {
 .promo-box {
   border: 1px solid var(--gold);
   padding: 60px 40px;
-  background-color: #222;
 }
 
 .promo-box h3 {
   font-family: 'Georgia', serif;
   font-size: 1.8rem;
-  color: #e0e0e0;
+  color: var(--text);
   text-transform: uppercase;
   letter-spacing: 1px;
   line-height: 1.5;
@@ -204,10 +173,11 @@ body.light-mode .feature-text button:hover {
   max-width: 600px;
   margin: 40px auto;
   margin-top: 300px;
-  background: #222;
+  background: var(--card);
   padding: 30px;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif !important;
 }
 
 .booking-container label {
@@ -222,15 +192,15 @@ body.light-mode .feature-text button:hover {
   width: 100%;
   padding: 10px;
   margin-top: 5px;
-  border: none;
+  border: 1px solid var(--border);
   border-radius: 5px;
-  background: #333;
-  color: white;
+  background: var(--card);
+  color: var(--text);
+  font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif !important;
 }
 
 .booking-container input[readonly] {
-  background: #444;
-  color: #ccc;
+  opacity: 0.85;
 }
 
 .booking-container textarea {
@@ -250,6 +220,7 @@ body.light-mode .feature-text button:hover {
   border-radius: 5px;
   cursor: pointer;
   transition: background 0.3s;
+  font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif !important;
 }
 
 .booking-container button:hover,
@@ -289,7 +260,7 @@ footer h3 {
 }
 
 .footer-column p {
-  color: #c0c0c0;
+  color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.6;
 }

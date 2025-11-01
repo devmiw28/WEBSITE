@@ -28,6 +28,7 @@ export default function BookingPage() {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark-mode';
     setTheme(savedTheme);
+    document.body.className = savedTheme;
   }, []);
 
   const toggleTheme = () => {
@@ -125,7 +126,7 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="dark-mode">
+    <div className={theme}>
       <Navbar
         onProfileClick={() => setShowProfileMenu(!showProfileMenu)}
         user={user}
@@ -175,7 +176,7 @@ export default function BookingPage() {
             <label>Time:</label>
             <select name="time" value={formData.time} onChange={handleChange} required disabled={!formData.staff_id || !formData.date}>
               <option value="">
-                {!formData.staff_id ? '- Select Staff -' : availableTimes.length === 0 ? '- No Slots Available -' : '-- Select Time --'}
+                {!formData.staff_id ? '-- Select Time --' : availableTimes.length === 0 ? '-- No Slots Available --' : '-- Select Time --'}
               </option>
               {availableTimes.map(time => (
                 <option key={time} value={time}>{time}</option>

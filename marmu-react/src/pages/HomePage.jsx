@@ -23,6 +23,7 @@ export default function HomePage() {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark-mode';
     setTheme(savedTheme);
+    document.body.className = savedTheme;
   }, []);
 
   const toggleTheme = () => {
