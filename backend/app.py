@@ -82,7 +82,7 @@ def send_email_otp(email, subject, otp):
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"] = YOUR_GMAIL
+    msg["From"] = f"Marmu Barber & Tattoo Shop <{YOUR_GMAIL}>"
     msg["To"] = email
     msg.attach(MIMEText(html_body, "html"))
 
@@ -132,7 +132,7 @@ def send_feedback_reply_email(to_email, username, reply):
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"] = YOUR_GMAIL
+    msg["From"] = f"Marmu Barber & Tattoo Shop <{YOUR_GMAIL}>"
     msg["To"] = to_email
     msg.attach(MIMEText(html_body, "html"))
 
@@ -185,7 +185,7 @@ def send_appointment_status_email(email, fullname, status, service=None, appoint
         # ✅ Prepare the MIME message
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = YOUR_GMAIL
+        msg["From"] = f"Marmu Barber & Tattoo Shop <{YOUR_GMAIL}>"
         msg["To"] = email
         msg.attach(MIMEText(html_body, "html"))
 
@@ -588,7 +588,38 @@ def create_booking():
         if not artist:
             return jsonify({"error": "Artist not found"}), 404
 
-        # Additional checks and database operations go here...
+        artist_name = artist[0] if artist else None
+
+        # Check if time slot is already booked
+        cursor.execute("""
+            SELECT id FROM tbl_appointment 
+            WHERE appointment_date=%s AND time=%s AND artist_id=%s AND status != 'Cancelled'
+        """, (date, time, staff_id))
+        if cursor.fetchone():
+            return jsonify({"error": "This time slot is already booked"}), 409
+
+        # Enforce booking limits: one haircut and one tattoo per user every 14 days
+        try:
+            cursor.execute("SELECT COUNT(*) FROM tbl_appointment WHERE user_id = %s AND service = %s AND appointment_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND status != 'Cancelled'", (user[0], service))
+            recent_count = cursor.fetchone()[0]
+            if recent_count and recent_count >= 1:
+                return jsonify({"error": f"You can only book one {service} every 2 weeks."}), 400
+        except Exception:
+            # If anything goes wrong with the check, continue (defensive)
+            pass
+
+        cursor.execute("""
+            INSERT INTO tbl_appointment 
+                (user_id, fullname, service, appointment_date, time, remarks, status, artist_id, artist_name)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Pending', %s, %s)
+        """, (user[0], fullname, service, date, time, remarks, staff_id, artist_name))
+
+        # Mark slot as booked in availability table
+        cursor.execute("""
+            UPDATE tbl_staff_unavailability
+            SET is_booked = TRUE
+            WHERE staff_id = %s AND unavailable_date = %s AND unavailable_time = %s
+        """, (staff_id, date, time))
 
         conn.commit()
         return jsonify({"message": "Booking created successfully!", "status": "Pending"}), 201
