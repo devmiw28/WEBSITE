@@ -250,10 +250,16 @@ def post_feedback():
         if not result:
             return jsonify({"error": "User not found"}), 404
 
+        # Enforce one feedback per user
+        user_id = result[0]
+        cursor.execute("SELECT 1 FROM tbl_feedback WHERE user_id = %s LIMIT 1", (user_id,))
+        if cursor.fetchone():
+            return jsonify({"error": "You have already submitted feedback."}), 409
+
         cursor.execute("""
             INSERT INTO tbl_feedback (user_id, username, stars, message, date_submitted)
             VALUES (%s, %s, %s, %s, %s)
-        """, (result[0], username, stars, message, datetime.now()))
+        """, (user_id, username, stars, message, datetime.now()))
         conn.commit()
         return jsonify({"message": "Feedback submitted successfully!"}), 201
     except Exception as e:

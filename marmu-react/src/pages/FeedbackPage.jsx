@@ -17,6 +17,7 @@ export default function FeedbackPage() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [message, setMessage] = useState('');
   const [feedbackList, setFeedbackList] = useState([]);
+  const alreadySubmitted = user && feedbackList?.some(f => f.username === user.username);
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -139,18 +140,24 @@ export default function FeedbackPage() {
             ))}
           </div>
 
+          {alreadySubmitted && (
+            <p style={{ color: '#0aa', marginBottom: '8px' }}>
+              You have already submitted feedback. Thank you!
+            </p>
+          )}
+
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Write your feedback..."
             rows="5"
-            disabled={submitting || (hasAnyRole && hasAnyRole(['admin','barber','tattooartist']))}
+            disabled={submitting || alreadySubmitted || (hasAnyRole && hasAnyRole(['admin','barber','tattooartist']))}
           />
 
           <button
             className="submit-btn"
             onClick={submitFeedback}
-            disabled={submitting || (hasAnyRole && hasAnyRole(['admin','barber','tattooartist']))}
+            disabled={submitting || alreadySubmitted || (hasAnyRole && hasAnyRole(['admin','barber','tattooartist']))}
           >
             {submitting ? 'Submitting...' : 'Submit Feedback'}
           </button>
