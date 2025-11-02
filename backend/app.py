@@ -57,27 +57,27 @@ def is_strong_password(pw: str) -> bool:
 def send_email_otp(email, subject, otp):
     html_body = f"""
     <html>
-    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-        <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            <h2 style="color: #0078d7; text-align: center;">Marmu Barber & Tattoo Shop</h2>
-            <p style="font-size: 16px; color: #333;">Hi there,</p>
-            <p style="font-size: 16px; color: #333;">Use the following One-Time Password (OTP) to reset your password:</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-                <span style="font-size: 32px; font-weight: bold; color: #ffffff; background-color: #0078d7; padding: 15px 25px; border-radius: 4px; letter-spacing: 5px;">
-                    {otp}
-                </span>
+        <body style="font-family: Arial, sans-serif; background-color: #333; padding: 20px;">
+            <div style="max-width: 600px; margin: auto; background: #333; padding: 30px; border-radius: 8px;  border: 4px solid goldenrod; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <h2 style="color: goldenrod; text-align: center;">Marmu Barber & Tattoo Shop</h2>
+                <p style="font-size: 16px; color: #333;">Hi there,</p>
+                <p style="font-size: 16px; color: #333;">Use the following One-Time Password (OTP) to reset your password:</p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <span style="font-size: 32px; font-weight: bold; color: #ffffff; background-color: #333; padding: 15px 25px; border-radius: 4px;  border: 2px solid goldenrod; letter-spacing: 5px;">
+                        {otp}
+                    </span>
+                </div>
+
+                <p style="font-size: 14px; color: #777;">
+                    This code is valid for <strong>{OTP_EXPIRY_MINUTES} minutes</strong>. Please do not share this code with anyone.
+                </p>
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="font-size: 12px; color: #999; text-align: center;">Thank you for choosing Marmu Barber & Tattoo Shop.</p>
             </div>
-
-            <p style="font-size: 14px; color: #777;">
-                This code is valid for <strong>{OTP_EXPIRY_MINUTES} minutes</strong>. Please do not share this code with anyone.
-            </p>
-
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-            <p style="font-size: 12px; color: #999; text-align: center;">Thank you for choosing Marmu Barber & Tattoo Shop.</p>
-        </div>
-    </body>
-    </html>
+        </body>
+        </html>
     """
 
     msg = MIMEMultipart("alternative")
@@ -103,31 +103,35 @@ def send_feedback_reply_email(to_email, username, reply):
     subject = "Reply to Your Feedback - Marmu Barber & Tattoo Shop"
 
     html_body = f"""
-    <html>
-    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-        <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            <h2 style="color: #0078d7; text-align: center;">Marmu Barber & Tattoo Shop</h2>
-            <p style="font-size: 16px; color: #333;">Hi {username},</p>
-            <p style="font-size: 16px; color: #333;">Thank you for your feedback! We truly appreciate your time and support.</p>
-            
-            <div style="background-color: #f8f9fa; padding: 15px 20px; border-left: 4px solid #0078d7; margin: 25px 0; border-radius: 5px;">
-                <p style="font-size: 15px; color: #333; margin: 0;">
-                    <strong>Our Reply:</strong><br>
-                    {reply}
-                </p>
-            </div>
+ <html>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+    <div 
+        style="max-width: 600px; margin: auto; background: #333; padding: 30px; border: 1px solid goldenrod; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <h2 style="color: goldenrod; text-align: center;">Marmu Barber & Tattoo Shop</h2>
+        <p style="font-size: 16px; color: #333;">Hi {username},</p>
+        <p style="font-size: 16px; color: #333;">Thank you for your feedback! We truly appreciate your time and support.
+        </p>
 
-            <p style="font-size: 15px; color: #333;">
-                We hope to see you again soon at <strong>Marmu Barber & Tattoo Shop</strong>!
-            </p>
-
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
-            <p style="font-size: 12px; color: #999; text-align: center;">
-                &copy; 2025 Marmu Barber & Tattoo Shop. All rights reserved.
+        <div
+            style="background-color: #333; padding: 15px 20px; border: 2px solid goldenrod; margin: 25px 0; border-radius: 5px;">
+            <p style="font-size: 15px; color: antiquewhite; margin: 0;">
+                <strong>Our Reply:</strong><br>
+                {reply}
             </p>
         </div>
-    </body>
-    </html>
+
+        <p style="font-size: 15px; color: #333;">
+            We hope to see you again soon at <strong>Marmu Barber & Tattoo Shop</strong>!
+        </p>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="font-size: 12px; color: #999; text-align: center;">
+            &copy; 2025 Marmu Barber & Tattoo Shop. All rights reserved.
+        </p>
+    </div>
+</body>
+</html>
+
     """
 
     msg = MIMEMultipart("alternative")
@@ -153,7 +157,7 @@ def send_appointment_status_email(email, fullname, status, service=None, appoint
         html_body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-            <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <div style="max-width: 600px; margin: auto; background: #333; padding: 30px; border-radius: 8px; border: 4px solid goldenrod; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                 <h2 style="color: #0078d7; text-align: center;">Marmu Barber & Tattoo Shop</h2>
                 <p style="font-size: 16px; color: #333;">Hi {fullname},</p>
                 <p style="font-size: 16px; color: #333;">
@@ -161,7 +165,7 @@ def send_appointment_status_email(email, fullname, status, service=None, appoint
                     <strong style="color: {'#28a745' if status.lower() == 'approved' else '#d9534f'};">{status}</strong>.
                 </p>
 
-                <div style="background-color: #f8f9fa; padding: 15px 20px; border-radius: 6px; margin: 20px 0;">
+                <div style="background-color: #333; padding: 15px 20px; border-radius: 6px; border: 2px solid goldenrod; margin: 20px 0;">
                     <p style="margin: 5px 0;"><strong>Service:</strong> {service or 'N/A'}</p>
                     <p style="margin: 5px 0;"><strong>Artist:</strong> {artist_name or 'N/A'}</p>
                     <p style="margin: 5px 0;"><strong>Date:</strong> {appointment_date or 'N/A'}</p>
