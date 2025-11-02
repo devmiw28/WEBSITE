@@ -30,7 +30,7 @@ export default function MonthlyReportChart({ data }) {
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip contentStyle={{ background: '#444', border: '1px solid #555' }} />
+          <Tooltip contentStyle={{ background: '#d8d8d8ff', border: '1px solid #555' }} />
           <Legend
             wrapperStyle={{ fontSize: '12px', paddingTop: '5px' }}
           />

@@ -69,9 +69,6 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
           <p>Username: {user?.username || '-'}</p>
           <p>Email: {user?.email || '-'}</p>
           <hr />
-          <button onClick={() => setShowChangePw(true)} className="change-password-btn" style={{marginBottom: '10px'}}>
-            Change Password
-          </button>
 
           <h3>Your Appointments</h3>
           <ul>
@@ -133,6 +130,9 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
             )}
           </ul>
 
+          <button onClick={() => setShowChangePw(true)} className="change-password-btn" style={{marginBottom: '10px'}}>
+            Change Password
+          </button>
           <button onClick={onToggleTheme}>
             Change Theme
           </button>

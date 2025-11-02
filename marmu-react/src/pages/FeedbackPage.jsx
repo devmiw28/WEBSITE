@@ -180,7 +180,32 @@ export default function FeedbackPage() {
             ))}
           </div>
         </section>
+
       </main>
+        <footer>
+        <h3>Marmu Barber & Tattoo Shop</h3>
+
+        {/* Placeholder icons for social media, assuming you'll use Font Awesome */}
+        <div className="social-icons">
+          <a href="#" aria-label="Instagram"><img src="/assets/instagram.png" alt="Instagram" /></a>
+          <a href="#" aria-label="Facebook"><img src="/assets/facebook.png" alt="Facebook" /></a>
+          <a href="#" aria-label="Email"><img src="/assets/mail.png" alt="Mail" /></a>
+        </div>
+
+        <div className="footer-content">
+          <div className="footer-column">
+            <h4>Location</h4>
+            <p>Nagbalon<br />Marilao, 3019<br />Bulacan, Philippines</p>
+          </div>
+          <div className="footer-column">
+            <h4>Opening Time</h4>
+            <p>Monday to Friday<br />9am - 8pm</p>
+          </div>
+        </div>
+
+        <p className="copyright">All rights reserved Marmu Barber & Tattoo Shop ©2022</p>
+      </footer>
+      
       {showProfileMenu && (
         <ProfileMenu
           onClose={() => setShowProfileMenu(false)}

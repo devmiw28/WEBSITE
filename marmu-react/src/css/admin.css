@@ -232,6 +232,57 @@ body.dark-mode {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
+/* ---- Table controls (filter, sort, search) ---- */
+.table-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: right;
+  gap: 8px;
+  color: #ddd;
+}
+
+.show-page{
+  margin-left: auto;
+  align-self: center;
+  color: #bbb;
+}
+
+.control-group label {
+  font-size: 0.9em;
+  color: #afcce8;
+}
+
+.control-group select,
+.control-group input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: #3a3a3a;
+  color: #fff;
+}
+
+.control-group.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-group.search input {
+  min-width: 260px;
+}
+
+.table-controls .action-btn {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
 .table th,
 .table td {
   padding: 12px 15px;

@@ -274,7 +274,7 @@ def login():
 
     try:
         conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         cursor.execute("""
             SELECT username, fullname, email, hash_pass, role 
             FROM tbl_users 
@@ -582,14 +582,14 @@ def create_booking():
         # Check if time slot is already booked
         cursor.execute("""
             SELECT id FROM tbl_appointment 
-            WHERE appointment_date=%s AND time=%s AND artist_id=%s AND status != 'Cancelled'
+            WHERE appointment_date=%s AND time=%s AND artist_id=%s AND status != 'Canceled'
         """, (date, time, staff_id))
         if cursor.fetchone():
             return jsonify({"error": "This time slot is already booked"}), 409
 
         # Enforce booking limits: one haircut and one tattoo per user every 14 days
         try:
-            cursor.execute("SELECT COUNT(*) FROM tbl_appointment WHERE user_id = %s AND service = %s AND appointment_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND status != 'Cancelled'", (user[0], service))
+            cursor.execute("SELECT COUNT(*) FROM tbl_appointment WHERE user_id = %s AND service = %s AND appointment_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND status != 'Canceled'", (user[0], service))
             recent_count = cursor.fetchone()[0]
             if recent_count and recent_count >= 1:
                 return jsonify({"error": f"You can only book one {service} every 2 weeks."}), 400
@@ -648,8 +648,7 @@ def cancel_appointment(appointment_id):
     conn = None
     try:
         conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-
+        cursor = conn.cursor(dictionary=True, buffered=True)
         # Verify the appointment belongs to the logged-in user
         cursor.execute("SELECT * FROM tbl_appointment WHERE id = %s", (appointment_id,))
         apt = cursor.fetchone()
@@ -662,11 +661,11 @@ def cancel_appointment(appointment_id):
             return jsonify({'error': 'Not authorized to cancel this appointment'}), 403
 
         # Only allow cancellation if appointment is not already in a terminal state
-        if apt['status'] in ('Cancelled', 'Completed', 'Abandoned', 'Done'):
-            return jsonify({'error': 'Appointment cannot be cancelled'}), 400
+        if apt['status'] in ('Canceled', 'Completed', 'Abandoned', 'Done'):
+            return jsonify({'error': 'Appointment cannot be Canceled'}), 400
 
-        # Update appointment status to Cancelled
-        cursor.execute("UPDATE tbl_appointment SET status = 'Cancelled' WHERE id = %s", (appointment_id,))
+        # Update appointment status to Canceled
+        cursor.execute("UPDATE tbl_appointment SET status = 'Canceled' WHERE id = %s", (appointment_id,))
 
         # Free up the availability slot if applicable
         try:
@@ -681,11 +680,11 @@ def cancel_appointment(appointment_id):
             cursor.execute("SELECT email, fullname FROM tbl_users WHERE id = %s", (apt['user_id'],))
             u = cursor.fetchone()
             if u and u.get('email'):
-                send_appointment_status_email(email=u['email'], fullname=u['fullname'], status='Cancelled', service=apt.get('service'), appointment_date=apt.get('appointment_date'), time=apt.get('time'), artist_name=apt.get('artist_name'))
+                send_appointment_status_email(email=u['email'], fullname=u['fullname'], status='Canceled', service=apt.get('service'), appointment_date=apt.get('appointment_date'), time=apt.get('time'), artist_name=apt.get('artist_name'))
         except Exception:
             pass
 
-        return jsonify({'message': 'Appointment cancelled'}), 200
+        return jsonify({'message': 'Appointment Canceled'}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -744,7 +743,7 @@ def get_available_slots():
     cursor.execute(
         """
         SELECT time FROM tbl_appointment
-        WHERE appointment_date = %s AND artist_id = %s AND status != 'Cancelled'
+        WHERE appointment_date = %s AND artist_id = %s AND status != 'Canceled'
         """,
         (date, staff_id),
     )
@@ -879,29 +878,114 @@ def get_staff_by_role():
 def get_appointments():
     conn = None
     try:
+        # Query params
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
+        q = request.args.get('q')
+        artist = request.args.get('artist')
+        sort = request.args.get('sort', 'date')
+
+        offset = max(page - 1, 0) * per_page
+
+        def normalize_status(value):
+            mapping = {
+                'pending': 'Pending',
+                'approved': 'Approved',
+                'denied': 'Denied',
+                'canceled': 'Canceled',
+                'completed': 'Completed',
+                'abandoned': 'Abandoned',
+                'done': 'Done',
+                'all': 'All'
+            }
+            return mapping.get(value.lower(), value.capitalize())
+
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT 
+
+        where_clauses = []
+        params = []
+
+        status = (request.args.get('status') or '').strip().lower()
+        exclude_history = request.args.get('exclude_history')
+        history_only = request.args.get('history_only')
+
+        if status and status != 'all':
+            where_clauses.append("COALESCE(a.status, 'Pending') = %s")
+            params.append(status.capitalize())
+        elif history_only == '1':
+            # only history statuses
+            where_clauses.append("COALESCE(a.status, 'Pending') IN ('Completed','Abandoned','Done')")
+        elif exclude_history == '1':
+            # exclude history statuses
+            where_clauses.append("COALESCE(a.status, 'Pending') NOT IN ('Completed','Abandoned','Done')")
+
+        # ✅ Search query
+        if q:
+            like_q = f"%{q}%"
+            where_clauses.append("""
+                (a.fullname LIKE %s OR a.service LIKE %s OR 
+                 a.artist_name LIKE %s OR CAST(a.id AS CHAR) LIKE %s)
+            """)
+            params.extend([like_q, like_q, like_q, like_q])
+
+        # ✅ Artist filter
+        if artist:
+            where_clauses.append("a.artist_name = %s")
+            params.append(artist.strip())
+
+        where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+
+        # ✅ Sorting
+        sort_map = {
+            'date': 'a.appointment_date ASC, a.time ASC',
+            'date_desc': 'a.appointment_date DESC, a.time DESC',
+            'name': 'a.fullname ASC',
+            'service': 'a.service ASC',
+            'artist': 'a.artist_name ASC'
+        }
+        order_sql = sort_map.get(sort, sort_map['date'])
+
+        # ✅ Total count
+        count_sql = f"SELECT COUNT(*) AS total FROM tbl_appointment a {where_sql}"
+        cursor.execute(count_sql, tuple(params))
+        row = cursor.fetchone()
+        total = row['total'] if row and 'total' in row else 0
+
+        # ✅ Final query with DISTINCT
+        sql = f"""
+            SELECT DISTINCT
                 a.id, 
                 a.fullname, 
                 a.service, 
                 a.artist_name,
                 a.appointment_date, 
                 a.time, 
-                COALESCE(a.status, 'Pending') AS status,
-                a.artist_name
+                COALESCE(a.status, 'Pending') AS status
             FROM tbl_appointment a
-        """)
+            {where_sql}
+            ORDER BY {order_sql}
+            LIMIT %s OFFSET %s
+        """
+
+        exec_params = params + [per_page, offset]
+        cursor.execute(sql, tuple(exec_params))
         data = cursor.fetchall()
         cursor.close()
-        return jsonify(data)
+
+        return jsonify({
+            "data": data,
+            "total": total,
+            "page": page,
+            "per_page": per_page
+        })
+
     except Exception as e:
+        print("Error in get_appointments:", e)
         return jsonify({"error": f"Internal server error: {e}"}), 500
     finally:
         if conn:
             conn.close()
-
 
 @app.route("/admin/appointments/<int:id>", methods=["PUT"])
 def update_appointment(id):
@@ -967,29 +1051,120 @@ def update_appointment(id):
 
 @app.route("/admin/users", methods=["GET"])
 def get_users():
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT fullname, username, email, role FROM tbl_users")
-    users = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jsonify(users)
+    conn = None
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
+        sort = request.args.get('sort', 'name')
+        filter_value = request.args.get('filter')
+
+        offset = max(page - 1, 0) * per_page
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        where_clauses = []
+        params = []
+
+        if filter_value and filter_value != 'all':
+            where_clauses.append("u.role = %s")
+            params.append(filter_value)
+
+        where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+
+        sort_map = {
+            'name': 'u.fullname ASC',
+            'name_desc': 'u.fullname DESC',
+            'username': 'u.username ASC',
+            'username_desc': 'u.username DESC',
+            'role': 'u.role ASC',
+            'role_desc': 'u.role DESC',
+        }
+        order_sql = sort_map.get(sort, sort_map['name'])
+
+        count_sql = f"SELECT COUNT(*) AS total FROM tbl_users u {where_sql}"
+        cursor.execute(count_sql, tuple(params))
+        total = cursor.fetchone()['total']
+
+        sql = f"""
+            SELECT u.id, u.fullname, u.username, u.role
+            FROM tbl_users u
+            {where_sql}
+            ORDER BY {order_sql}
+            LIMIT %s OFFSET %s
+        """
+        cursor.execute(sql, (*params, per_page, offset))
+        data = cursor.fetchall()
+
+        return jsonify({
+            "data": data,
+            "total": total,
+            "page": page,
+            "per_page": per_page
+        })
+    except Exception as e:
+        print("Error in get_users:", e)
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 @app.route("/admin/feedback", methods=["GET"])
 def get_feedback_admin():
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT id, username AS user, stars, message, COALESCE(reply, '') AS reply,
-               resolved,
-               DATE_FORMAT(date_submitted, '%Y-%m-%d %H:%i') AS date_submitted
-        FROM tbl_feedback
-        ORDER BY date_submitted DESC
-    """)
-    feedback = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jsonify(feedback)
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 50))
+        status = request.args.get('status')
+        q = request.args.get('q')
+        sort = request.args.get('sort', 'date')
+
+        offset = max(page - 1, 0) * per_page
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        where_clauses = []
+        params = []
+        if status == 'resolved':
+            where_clauses.append('resolved = 1')
+        elif status == 'pending':
+            where_clauses.append('resolved = 0')
+        if q:
+            like_q = f"%{q}%"
+            where_clauses.append('(username LIKE %s OR message LIKE %s)')
+            params.extend([like_q, like_q])
+
+        where_sql = 'WHERE ' + ' AND '.join(where_clauses) if where_clauses else ''
+
+        sort_map = {
+            'date': "date_submitted DESC",
+            'rating': "stars DESC"
+        }
+        order_sql = sort_map.get(sort, sort_map['date'])
+
+        count_sql = f"SELECT COUNT(*) AS total FROM tbl_feedback {where_sql}"
+        cursor.execute(count_sql, tuple(params))
+        row = cursor.fetchone()
+        total = row['total'] if row and 'total' in row else 0
+
+        sql = f"""
+            SELECT id, username AS user, stars, message, COALESCE(reply, '') AS reply,
+                   resolved,
+                   DATE_FORMAT(date_submitted, '%%Y-%%m-%%d %%H:%%i') AS date_submitted
+            FROM tbl_feedback
+            {where_sql}
+            ORDER BY {order_sql}
+            LIMIT %s OFFSET %s
+        """
+        exec_params = params + [per_page, offset]
+        cursor.execute(sql, tuple(exec_params))
+        feedback = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify({"data": feedback, "total": total, "page": page, "per_page": per_page})
+    except Exception as e:
+        print("Error in get_feedback_admin:", e)
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/admin/add_user', methods=['POST'])
 def add_user():
@@ -1002,8 +1177,7 @@ def add_user():
         password = data.get('password')
         role = data.get('role')
 
-        
-        password = generate_password_hash(password)
+        password = hash_password(password)
         # ✅ Check required fields
         if not all([fullname, username, email, password, role]):
             return jsonify({"error": "Missing required fields"}), 400
@@ -1107,6 +1281,7 @@ def toggle_feedback_resolved(feedback_id):
         if 'conn' in locals() and conn.is_connected():
             cursor.close()
             conn.close()
+
             
 # =========================================
 # SERVICES
@@ -1146,10 +1321,5 @@ def get_service_images():
         "total": len(tattoos) + len(haircuts)
     }), 200
 
-if __name__ == "__main__":
-    app.run(debug=True)
-# =========================================
-# MAIN ENTRY
-# =========================================
 if __name__ == "__main__":
     app.run(debug=True)

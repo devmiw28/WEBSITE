@@ -87,7 +87,7 @@ function AdminAddUserModal({ onClose, onUserAdded }) {
                         type="text"
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
-                        placeholder="Enter role (e.g., Client)"
+                        placeholder="Enter role (user, Admin, tattooartist, barber)"
                     />
 
                     <div className="modal-actions">
