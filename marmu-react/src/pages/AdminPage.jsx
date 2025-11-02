@@ -637,7 +637,7 @@ export default function AdminPage() {
                       <option value="pending">Pending</option>
                       <option value="approved">Approved</option>
                       <option value="denied">Denied</option>
-                      <option value="canceled">Canceled</option>
+                      <option value="cancelled">Cancelled</option>
                     </select>
                   </div>
                   <div className="control-group">

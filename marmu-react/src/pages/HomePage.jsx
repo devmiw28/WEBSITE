@@ -108,7 +108,7 @@ export default function HomePage() {
         {/* Placeholder icons for social media, assuming you'll use Font Awesome */}
         <div className="social-icons">
           <a href="#" aria-label="Instagram"><img src="/assets/instagram.png" alt="Instagram" /></a>
-          <a href="#" aria-label="Facebook"><img src="/assets/facebook.png" alt="Facebook" /></a>
+          <a href="https://www.facebook.com/tattooshackz" aria-label="Facebook"><img src="/assets/facebook.png" alt="Facebook" /></a>
           <a href="#" aria-label="Email"><img src="/assets/mail.png" alt="Mail" /></a>
         </div>
 
@@ -119,7 +119,8 @@ export default function HomePage() {
           </div>
           <div className="footer-column">
             <h4>Opening Time</h4>
-            <p>Monday to Friday<br />9am - 8pm</p>
+            <p>Monday to Friday<br />9am - 9pm</p>
+            <p>Saturday<br />9am - 2pm</p>
           </div>
         </div>
 

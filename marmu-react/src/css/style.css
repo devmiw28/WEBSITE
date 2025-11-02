@@ -149,12 +149,12 @@
 .perks-promo {
   text-align: center;
   margin: 100px auto;
-  max-width: 800px;
+  max-width: 600px;
 }
 
 .promo-box {
   border: 1px solid var(--gold);
-  padding: 60px 40px;
+  padding: 10px 40px;
 }
 
 .promo-box h3 {
@@ -240,7 +240,7 @@ footer h3 {
   margin-bottom: 30px;
 }
 
-.footer-content {
+.footer-content, .copyright {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;

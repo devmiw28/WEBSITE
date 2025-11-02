@@ -582,14 +582,14 @@ def create_booking():
         # Check if time slot is already booked
         cursor.execute("""
             SELECT id FROM tbl_appointment 
-            WHERE appointment_date=%s AND time=%s AND artist_id=%s AND status != 'Canceled'
+            WHERE appointment_date=%s AND time=%s AND artist_id=%s AND status != 'Cancelled'
         """, (date, time, staff_id))
         if cursor.fetchone():
             return jsonify({"error": "This time slot is already booked"}), 409
 
         # Enforce booking limits: one haircut and one tattoo per user every 14 days
         try:
-            cursor.execute("SELECT COUNT(*) FROM tbl_appointment WHERE user_id = %s AND service = %s AND appointment_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND status != 'Canceled'", (user[0], service))
+            cursor.execute("SELECT COUNT(*) FROM tbl_appointment WHERE user_id = %s AND service = %s AND appointment_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND status != 'Cancelled'", (user[0], service))
             recent_count = cursor.fetchone()[0]
             if recent_count and recent_count >= 1:
                 return jsonify({"error": f"You can only book one {service} every 2 weeks."}), 400
@@ -661,11 +661,11 @@ def cancel_appointment(appointment_id):
             return jsonify({'error': 'Not authorized to cancel this appointment'}), 403
 
         # Only allow cancellation if appointment is not already in a terminal state
-        if apt['status'] in ('Canceled', 'Completed', 'Abandoned', 'Done'):
-            return jsonify({'error': 'Appointment cannot be Canceled'}), 400
+        if apt['status'] in ('Cancelled', 'Completed', 'Abandoned', 'Done'):
+            return jsonify({'error': 'Appointment cannot be Cancelled'}), 400
 
-        # Update appointment status to Canceled
-        cursor.execute("UPDATE tbl_appointment SET status = 'Canceled' WHERE id = %s", (appointment_id,))
+        # Update appointment status to Cancelled
+        cursor.execute("UPDATE tbl_appointment SET status = 'Cancelled' WHERE id = %s", (appointment_id,))
 
         # Free up the availability slot if applicable
         try:
@@ -680,11 +680,11 @@ def cancel_appointment(appointment_id):
             cursor.execute("SELECT email, fullname FROM tbl_users WHERE id = %s", (apt['user_id'],))
             u = cursor.fetchone()
             if u and u.get('email'):
-                send_appointment_status_email(email=u['email'], fullname=u['fullname'], status='Canceled', service=apt.get('service'), appointment_date=apt.get('appointment_date'), time=apt.get('time'), artist_name=apt.get('artist_name'))
+                send_appointment_status_email(email=u['email'], fullname=u['fullname'], status='Cancelled', service=apt.get('service'), appointment_date=apt.get('appointment_date'), time=apt.get('time'), artist_name=apt.get('artist_name'))
         except Exception:
             pass
 
-        return jsonify({'message': 'Appointment Canceled'}), 200
+        return jsonify({'message': 'Appointment Cancelled'}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -743,7 +743,7 @@ def get_available_slots():
     cursor.execute(
         """
         SELECT time FROM tbl_appointment
-        WHERE appointment_date = %s AND artist_id = %s AND status != 'Canceled'
+        WHERE appointment_date = %s AND artist_id = %s AND status != 'Cancelled'
         """,
         (date, staff_id),
     )
@@ -892,7 +892,7 @@ def get_appointments():
                 'pending': 'Pending',
                 'approved': 'Approved',
                 'denied': 'Denied',
-                'canceled': 'Canceled',
+                'cancelled': 'Cancelled',
                 'completed': 'Completed',
                 'abandoned': 'Abandoned',
                 'done': 'Done',
@@ -1087,7 +1087,7 @@ def get_users():
         total = cursor.fetchone()['total']
 
         sql = f"""
-            SELECT u.id, u.fullname, u.username, u.role
+            SELECT u.id, u.fullname, u.username, u.email, u.role
             FROM tbl_users u
             {where_sql}
             ORDER BY {order_sql}
