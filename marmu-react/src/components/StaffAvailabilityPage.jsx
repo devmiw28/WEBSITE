@@ -11,6 +11,9 @@ export default function StaffAvailabilityPage() {
     const [role, setRole] = useState(""); 
     const [staffList, setStaffList] = useState([]);
     const [selectedStaff, setSelectedStaff] = useState("");
+    const [saving, setSaving] = useState(false);
+    const [hasSaved, setHasSaved] = useState(false);
+    const todayIso = useMemo(() => new Date().toISOString().split('T')[0], []);
 
     useEffect(() => {
         if (user.role === "Admin" && role) {
@@ -23,6 +26,7 @@ export default function StaffAvailabilityPage() {
 
 
     const handleToggleTime = (time) => {
+        if (hasSaved) setHasSaved(false);
         setUnavailableTimes((prev) =>
             prev.includes(time) ? prev.filter((t) => t !== time) : [...prev, time]
         );
@@ -45,6 +49,12 @@ export default function StaffAvailabilityPage() {
             return;
         }
 
+        // Prevent saving availability for past dates
+        if (date < todayIso) {
+            alert("Please select today or a future date.");
+            return;
+        }
+
         const defaults = computeDefaultSlots(date);
         if (defaults.length === 0) {
             alert("Sunday is unavailable by default. No availability to save.");
@@ -57,6 +67,7 @@ export default function StaffAvailabilityPage() {
             return;
         }
 
+        setSaving(true);
         const res = await fetch(`${API_BASE_URL}/api/staff/availability`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -72,7 +83,10 @@ export default function StaffAvailabilityPage() {
         try { data = text ? JSON.parse(text) : {}; } catch {}
         alert(data.message || `Error saving availability (${res.status})`);
         setUnavailableTimes([]);
-        setDate("");
+        setHasSaved(true);
+        // Optionally clear the selected date. Keeping the date selected helps review just-saved times.
+        // setDate("");
+        setSaving(false);
     };
 
     const computeDefaultSlots = (isoDate) => {
@@ -80,7 +94,7 @@ export default function StaffAvailabilityPage() {
         const d = new Date(isoDate + 'T00:00:00');
         const day = d.getDay(); // 0 Sun .. 6 Sat (local)
         if (day === 0) return [];
-        const endHour = day === 6 ? 18 : 20; // Sat 9-18, Mon-Fri 9-20
+        const endHour = day === 6 ? 17 : 21; // Sat 9-17, Mon-Fri 9-21
         const slots = [];
         for (let h = 9; h < endHour; h++) {
             const hh = String(h).padStart(2, '0');
@@ -134,7 +148,7 @@ export default function StaffAvailabilityPage() {
 
             {/* 📅 Date Picker */}
             <label>Select Date:</label>
-            <input className="date-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <input className="date-input" type="date" value={date} min={todayIso} onChange={(e) => { setHasSaved(false); setDate(e.target.value); }}/>
 
             {/* ⏰ Time Slots */}
             <div className="time-grid">
@@ -154,7 +168,11 @@ export default function StaffAvailabilityPage() {
             ) : (
                 <>
                     <p className="availability-note">Default working hours are assumed. Click to mark UNAVAILABLE.</p>
-                    <button className="save-btn" onClick={handleSave}>Save</button>
+                    {!hasSaved && (
+                        <button className="save-btn" onClick={handleSave} disabled={saving}>
+                            {saving ? 'Saving...' : 'Save'}
+                        </button>
+                    )}
                 </>
             )}
         </div>
