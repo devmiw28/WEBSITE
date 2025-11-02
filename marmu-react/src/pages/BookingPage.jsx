@@ -130,7 +130,7 @@ export default function BookingPage() {
         setLoading(false);
         return;
       }
-
+      
       const data = await response.json();
       alert(data.message || 'Booking successful!');
       // Handle success, e.g., redirect user or update UI state

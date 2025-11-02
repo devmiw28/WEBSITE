@@ -158,21 +158,21 @@ def send_appointment_status_email(email, fullname, status, service=None, appoint
         <html>
         <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
             <div style="max-width: 600px; margin: auto; background: #333; padding: 30px; border-radius: 8px; border: 4px solid goldenrod; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                <h2 style="color: #0078d7; text-align: center;">Marmu Barber & Tattoo Shop</h2>
-                <p style="font-size: 16px; color: #333;">Hi {fullname},</p>
-                <p style="font-size: 16px; color: #333;">
+                <h2 style="color: goldenrod; text-align: center;">Marmu Barber & Tattoo Shop</h2>
+                <p style="font-size: 16px; color: #fff;">Hi {fullname},</p>
+                <p style="font-size: 16px; color: #fff;">
                     We wanted to let you know that your appointment has been 
                     <strong style="color: {'#28a745' if status.lower() == 'approved' else '#d9534f'};">{status}</strong>.
                 </p>
 
                 <div style="background-color: #333; padding: 15px 20px; border-radius: 6px; border: 2px solid goldenrod; margin: 20px 0;">
-                    <p style="margin: 5px 0;"><strong>Service:</strong> {service or 'N/A'}</p>
-                    <p style="margin: 5px 0;"><strong>Artist:</strong> {artist_name or 'N/A'}</p>
-                    <p style="margin: 5px 0;"><strong>Date:</strong> {appointment_date or 'N/A'}</p>
-                    <p style="margin: 5px 0;"><strong>Time:</strong> {time or 'N/A'}</p>
+                    <p style="margin: 5px 0; color: #fff;"><strong>Service:</strong> {service or 'N/A'}</p>
+                    <p style="margin: 5px 0; color: #fff;"><strong>Artist:</strong> {artist_name or 'N/A'}</p>
+                    <p style="margin: 5px 0; color: #fff;"><strong>Date:</strong> {appointment_date or 'N/A'}</p>
+                    <p style="margin: 5px 0; color: #fff;"><strong>Time:</strong> {time or 'N/A'}</p>
                 </div>
 
-                <p style="font-size: 16px; color: #333;">
+                <p style="font-size: 16px; color: #fff;">
                     Thank you for choosing <strong>Marmu Barber & Tattoo Shop</strong>! 
                     We’re looking forward to serving you soon.
                 </p>
