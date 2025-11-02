@@ -69,49 +69,50 @@ export default function BookingPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (
-      !formData.service ||
-      !formData.staff_id ||
-      !formData.date ||
-      !formData.time
-    ) {
+    if (!formData.service || !formData.staff_id || !formData.date || !formData.time) {
       alert("Please fill out all required fields");
       return;
     }
 
     setLoading(true);
+
     // Enforce frontend double-check of 1-per-service-per-2-weeks rule
     try {
-      const resp = await fetch(
-        `${API_BASE_URL}/api/appointments/${user.username}`
-      );
-      if (resp.ok) {
-        const existing = await resp.json();
-        const twoWeeksAgo = new Date();
-        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-        const hasRecent = existing.some((a) => {
-          try {
-            if (!a.service) return false;
-            if (a.service.toLowerCase() !== formData.service.toLowerCase())
-              return false;
-            const dt = new Date(`${a.appointment_date}T${a.time}:00`);
-            return dt >= twoWeeksAgo && a.status !== "Cancelled";
-          } catch (e) {
-            return false;
-          }
-        });
-        if (hasRecent) {
-          alert(
-            `⚠️ You already have a ${formData.service} booked within the last 2 weeks. Please wait before booking another.`
-          );
-          setLoading(false);
-          return;
+      const resp = await fetch(`${API_BASE_URL}/api/appointments/${user.username}`);
+      if (!resp.ok) {
+        const errorData = await resp.json();
+        alert(`Error: ${errorData.error || 'Failed to validate booking limit'}`);
+        setLoading(false);
+        return;
+      }
+
+      const existing = await resp.json();
+      const twoWeeksAgo = new Date();
+      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+      const hasRecent = existing.some((a) => {
+        try {
+          if (!a.service) return false;
+          if (a.service.toLowerCase() !== formData.service.toLowerCase()) return false;
+
+          const dt = new Date(`${a.appointment_date}T${a.time}:00`);
+          return dt >= twoWeeksAgo && a.status !== "Cancelled";
+        } catch (e) {
+          return false;
         }
+      });
+
+      if (hasRecent) {
+        alert(`⚠️ You already have a ${formData.service} booked within the last 2 weeks. Please wait before booking another.`);
+        setLoading(false);
+        return;
       }
     } catch (err) {
       console.error("Failed to validate booking limit:", err);
-      // allow submission to continue; server will enforce as well
+      // Allow submission to continue; server will enforce as well
     }
+
+    // Submit the booking data to the server
     try {
       const response = await fetch(`${API_BASE_URL}/api/bookings`, {
         method: "POST",
@@ -123,23 +124,19 @@ export default function BookingPage() {
         }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Booking failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error || 'Booking failed'}`);
+        setLoading(false);
+        return;
+      }
 
-      alert(
-        `✅ Booking confirmed for ${user.fullname}\nService: ${formData.service}\nDate: ${formData.date}\nTime: ${formData.time}`
-      );
-      setFormData({
-        service: "",
-        staff_id: "",
-        date: "",
-        time: "",
-        remarks: "",
-      });
-      setAvailableTimes([]);
-      setStaffList([]);
-    } catch (err) {
-      alert(`❌ ${err.message}`);
+      const data = await response.json();
+      alert(data.message || 'Booking successful!');
+      // Handle success, e.g., redirect user or update UI state
+    } catch (error) {
+      console.error("Error during booking:", error);
+      alert("An error occurred while submitting your booking. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -217,8 +214,8 @@ export default function BookingPage() {
                 {!formData.staff_id
                   ? "-- Select Time --"
                   : availableTimes.length === 0
-                  ? "-- No Slots Available --"
-                  : "-- Select Time --"}
+                    ? "-- No Slots Available --"
+                    : "-- Select Time --"}
               </option>
               {availableTimes.map((time) => (
                 <option key={time} value={time}>

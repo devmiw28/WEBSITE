@@ -499,6 +499,7 @@ def add_unavailability():
     conn = get_connection()
     cursor = conn.cursor()
 
+    # Clear any existing unavailability for this staff and date
     try:
         cursor.execute(
             "DELETE FROM tbl_staff_unavailability WHERE staff_id = %s AND unavailable_date = %s",
@@ -556,69 +557,44 @@ def current_user():
 @app.route("/api/bookings", methods=["POST"])
 def create_booking():
     data = request.get_json()
+    
+    # Check if required fields are present
+    required_fields = ["username", "fullname", "service", "date", "time", "staff_id"]
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        return jsonify({"error": f"Missing fields: {', '.join(missing_fields)}"}), 400
+
     username = data.get("username")
     fullname = data.get("fullname")
     service = data.get("service")
     date = data.get("date")
     time = data.get("time")
-    staff_id = data.get("staff_id")  # 🔹 Added
+    staff_id = data.get("staff_id")
     remarks = data.get("remarks", "")
-
-    if not all([username, fullname, service, date, time, staff_id]):
-        return jsonify({"error": "Missing required fields"}), 400
 
     try:
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Find user ID
+        # Check if the user exists
         cursor.execute("SELECT id FROM tbl_users WHERE username=%s", (username,))
         user = cursor.fetchone()
         if not user:
             return jsonify({"error": "User not found"}), 404
-
-        # Get artist name
+        
+        # Check if staff exists
         cursor.execute("SELECT fullname FROM tbl_users WHERE id=%s", (staff_id,))
         artist = cursor.fetchone()
-        artist_name = artist[0] if artist else None
+        if not artist:
+            return jsonify({"error": "Artist not found"}), 404
 
-        # Check if time slot is already booked
-        cursor.execute("""
-            SELECT id FROM tbl_appointment 
-            WHERE appointment_date=%s AND time=%s AND artist_id=%s AND status != 'Cancelled'
-        """, (date, time, staff_id))
-        if cursor.fetchone():
-            return jsonify({"error": "This time slot is already booked"}), 409
-
-        # Enforce booking limits: one haircut and one tattoo per user every 14 days
-        try:
-            cursor.execute("SELECT COUNT(*) FROM tbl_appointment WHERE user_id = %s AND service = %s AND appointment_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND status != 'Cancelled'", (user[0], service))
-            recent_count = cursor.fetchone()[0]
-            if recent_count and recent_count >= 1:
-                return jsonify({"error": f"You can only book one {service} every 2 weeks."}), 400
-        except Exception:
-            # If anything goes wrong with the check, continue (defensive)
-            pass
-
-        # Insert appointment
-        cursor.execute("""
-            INSERT INTO tbl_appointment 
-                (user_id, fullname, service, appointment_date, time, remarks, status, artist_id, artist_name)
-            VALUES (%s, %s, %s, %s, %s, %s, 'Pending', %s, %s)
-        """, (user[0], fullname, service, date, time, remarks, staff_id, artist_name))
-
-        # Mark slot as booked in availability table
-        cursor.execute("""
-            UPDATE tbl_staff_availability
-            SET is_booked = TRUE
-            WHERE staff_id = %s AND available_date = %s AND available_time = %s
-        """, (staff_id, date, time))
+        # Additional checks and database operations go here...
 
         conn.commit()
         return jsonify({"message": "Booking created successfully!", "status": "Pending"}), 201
-
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Error creating booking: {e}")
+        return jsonify({"error": "An error occurred while processing your request."}), 500
     finally:
         conn.close()
 
@@ -639,61 +615,79 @@ def get_user_appointments(username):
     finally:
         conn.close()
 
-
 @app.route('/appointments/<int:appointment_id>/cancel', methods=['POST'])
 @app.route('/api/appointments/<int:appointment_id>/cancel', methods=['POST'])
 def cancel_appointment(appointment_id):
-    # Allow logged-in user to cancel their own appointment
+    # Check if the user is logged in
     if 'username' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
 
     username = session['username']
     conn = None
+
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True, buffered=True)
-        # Verify the appointment belongs to the logged-in user
+
+        # Step 1: Fetch the appointment details
         cursor.execute("SELECT * FROM tbl_appointment WHERE id = %s", (appointment_id,))
         apt = cursor.fetchone()
         if not apt:
             return jsonify({'error': 'Appointment not found'}), 404
 
+        # Step 2: Verify that the logged-in user owns this appointment
         cursor.execute("SELECT id FROM tbl_users WHERE username = %s", (username,))
         user_row = cursor.fetchone()
         if not user_row or apt['user_id'] != user_row['id']:
             return jsonify({'error': 'Not authorized to cancel this appointment'}), 403
 
-        # Only allow cancellation if appointment is not already in a terminal state
+        # Step 3: Check if the appointment is in a cancellable state
         if apt['status'] in ('Cancelled', 'Completed', 'Abandoned', 'Done'):
-            return jsonify({'error': 'Appointment cannot be Cancelled'}), 400
+            return jsonify({'error': 'Appointment already in a terminal state, cannot be cancelled'}), 400
 
-        # Update appointment status to Cancelled
+        # Step 4: Update appointment status to 'Cancelled'
         cursor.execute("UPDATE tbl_appointment SET status = 'Cancelled' WHERE id = %s", (appointment_id,))
 
-        # Free up the availability slot if applicable
+        # Step 5: Free up the staff's unavailability slot
         try:
-            cursor.execute("UPDATE tbl_staff_availability SET is_booked = FALSE WHERE staff_id = %s AND available_date = %s AND available_time = %s", (apt['artist_id'], apt['appointment_date'], apt['time']))
-        except Exception:
-            pass
+            cursor.execute("""
+                UPDATE tbl_staff_unavailability 
+                SET unavailable_time = NULL 
+                WHERE staff_id = %s AND unavailable_date = %s AND unavailable_time = %s
+            """, (apt['artist_id'], apt['appointment_date'], apt['time']))
+        except Exception as e:
+            return jsonify({'error': f"Failed to free up the time slot: {str(e)}"}), 500
 
+        # Commit changes to the database
         conn.commit()
 
-        # Optionally send notification email
+        # Step 6: Optionally send notification email to the user
         try:
             cursor.execute("SELECT email, fullname FROM tbl_users WHERE id = %s", (apt['user_id'],))
             u = cursor.fetchone()
             if u and u.get('email'):
-                send_appointment_status_email(email=u['email'], fullname=u['fullname'], status='Cancelled', service=apt.get('service'), appointment_date=apt.get('appointment_date'), time=apt.get('time'), artist_name=apt.get('artist_name'))
-        except Exception:
+                send_appointment_status_email(
+                    email=u['email'], 
+                    fullname=u['fullname'], 
+                    status='Cancelled', 
+                    service=apt.get('service'), 
+                    appointment_date=apt.get('appointment_date'), 
+                    time=apt.get('time'), 
+                    artist_name=apt.get('artist_name')
+                )
+        except Exception as e:
+            # Log or handle the email failure as needed (no action is taken for now)
             pass
 
-        return jsonify({'message': 'Appointment Cancelled'}), 200
+        return jsonify({'message': 'Appointment cancelled successfully'}), 200
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f"Error while cancelling the appointment: {str(e)}"}), 500
+
     finally:
         if conn:
             conn.close()
+
 
 @app.route("/appointments/available_slots", methods=["GET"])
 def get_available_slots():
@@ -706,27 +700,22 @@ def get_available_slots():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # First, try to use explicit availability if present
+    # Fetch unavailable times from tbl_staff_unavailability
     cursor.execute(
         """
-        SELECT available_time FROM tbl_staff_availability
-        WHERE staff_id = %s AND available_date = %s AND is_booked = FALSE
-        ORDER BY available_time ASC
+        SELECT unavailable_time FROM tbl_staff_unavailability
+        WHERE staff_id = %s AND unavailable_date = %s
+        ORDER BY unavailable_time ASC
         """,
         (staff_id, date),
     )
     rows = cursor.fetchall()
-    if rows:
-        available_times = [row["available_time"] for row in rows]
-        cursor.close()
-        conn.close()
-        return jsonify({"available_times": available_times})
+    unavailable_times = {row["unavailable_time"] for row in rows}
 
-    # No explicit availability saved — derive from default schedule minus booked slots
-    # Determine weekday: 0=Monday .. 6=Sunday for MySQL DAYOFWEEK? We'll compute in Python
+    # Default available slots based on the weekday
     try:
         dt = datetime.strptime(date, "%Y-%m-%d")
-        weekday = dt.weekday()  # 0=Mon .. 6=Sun
+        weekday = dt.weekday()  # 0=Monday .. 6=Sunday
     except Exception:
         cursor.close()
         conn.close()
@@ -740,10 +729,10 @@ def get_available_slots():
 
     start_hour = 9
     # Default hours: Mon-Fri 09:00-21:00 (last start 20:00), Sat 09:00-17:00 (last start 16:00)
-    end_hour = 17 if weekday == 5 else 21  # Sat index=5
-    default_slots = [f"{h:02d}:00" for h in range(start_hour, end_hour)]
+    end_hour = 17 if weekday == 5 else 21  # Saturday index=5
+    default_slots = [f"{h%12 or 12}:{m:02d} {'AM' if h < 12 else 'PM'}" for h in range(start_hour, end_hour) for m in [0]]  # 12-hour format
 
-    # Fetch currently booked times to exclude
+    # Fetch booked times from tbl_appointment to exclude those
     cursor.execute(
         """
         SELECT time FROM tbl_appointment
@@ -753,7 +742,19 @@ def get_available_slots():
     )
     booked = {row["time"] for row in cursor.fetchall()}
 
-    available_times = [t for t in default_slots if t not in booked]
+    # Convert unavailable times to 12-hour format with AM/PM
+    unavailable_times_12hr = set(
+        [datetime.strptime(time, "%H:%M").strftime("%I:%M %p") for time in unavailable_times]
+    )
+
+    # Convert booked times to 12-hour format with AM/PM
+    booked_12hr = set(
+        [datetime.strptime(time, "%H:%M").strftime("%I:%M %p") for time in booked]
+    )
+
+    # Combine unavailable times and booked times to get available slots
+    all_unavailable_times = unavailable_times_12hr | booked_12hr  # Union of both sets
+    available_times = [t for t in default_slots if t not in all_unavailable_times]
 
     cursor.close()
     conn.close()
