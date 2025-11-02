@@ -1,5 +1,6 @@
 // components/SignupModal.jsx
 import { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import { API_BASE_URL } from '../App';
 
 export default function SignupModal({ isOpen, onClose, switchToLogin }) {
@@ -31,7 +32,8 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
     }
   }, [isOpen]);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const sendOTP = async () => {
     if (!/^[^\s@]+@gmail\.com$/i.test(formData.email)) {
@@ -47,15 +49,33 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email })
       });
+
       const text = await res.text();
       let data = {};
-      try { data = text ? JSON.parse(text) : {}; } catch {}
-      if (!res.ok) throw new Error(data.error || `Failed to send OTP (${res.status})`);
+      try { data = text ? JSON.parse(text) : {}; } catch { }
 
-      alert(data.message);
+      if (!res.ok)
+        throw new Error(data.error || `Failed to send OTP (${res.status})`);
+
+      // ✅ SweetAlert success message
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: data.message,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+
       setOtpSent(true);
     } catch (err) {
       setError(err.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -73,7 +93,7 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
       setError('Passwords do not match');
       return;
     }
-    // Enforce same strength as change password: >=8 chars, includes letters and numbers
+
     const hasLetter = /[A-Za-z]/.test(formData.password);
     const hasNumber = /\d/.test(formData.password);
     if (formData.password.length < 8 || !hasLetter || !hasNumber) {
@@ -88,16 +108,32 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
+
       const text = await res.text();
       let data = {};
-      try { data = text ? JSON.parse(text) : {}; } catch {}
-      if (!res.ok) throw new Error(data.error || `Signup failed (${res.status})`);
+      try { data = text ? JSON.parse(text) : {}; } catch { }
 
-      alert(data.message);
-      onClose();
-      switchToLogin();
+      if (!res.ok)
+        throw new Error(data.error || `Signup failed (${res.status})`);
+
+      // ✅ SweetAlert success message for signup
+      Swal.fire({
+        position: 'center',
+        icon: 'success',
+        title: 'Signup Successful!',
+        text: data.message,
+        showConfirmButton: true,
+      }).then(() => {
+        onClose();
+        switchToLogin();
+      });
     } catch (err) {
       setError(err.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Signup Failed',
+        text: err.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -108,7 +144,6 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
   return (
     <div className="signup-modal-overlay" onClick={onClose}>
       <div className="signup-modal-content" onClick={(e) => e.stopPropagation()}>
-
         <h2 className="signup-modal-title">Create Account</h2>
 
         <form onSubmit={handleSubmit}>
