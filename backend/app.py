@@ -736,7 +736,8 @@ def get_available_slots():
         return jsonify({"available_times": []})
 
     start_hour = 9
-    end_hour = 18 if weekday == 5 else 20  # Sat index=5
+    # Default hours: Mon-Fri 09:00-21:00 (last start 20:00), Sat 09:00-17:00 (last start 16:00)
+    end_hour = 17 if weekday == 5 else 21  # Sat index=5
     default_slots = [f"{h:02d}:00" for h in range(start_hour, end_hour)]
 
     # Fetch currently booked times to exclude
