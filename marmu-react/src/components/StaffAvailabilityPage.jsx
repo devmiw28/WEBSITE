@@ -134,7 +134,7 @@ export default function StaffAvailabilityPage() {
 
             {/* 📅 Date Picker */}
             <label>Select Date:</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <input className="date-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
 
             {/* ⏰ Time Slots */}
             <div className="time-grid">

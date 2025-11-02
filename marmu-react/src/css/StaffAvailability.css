@@ -53,7 +53,34 @@
 
 .availability-page select:focus {
   outline: none;
-  border-color: #d4af37;
+  border-color: var(--gold);
+}
+
+.date-input {
+  padding: 10px;
+  border: 2px solid #333;
+  border-radius: 5px;
+  font-size: 16px;
+  color: #333;
+  background-color: #f8f8f8;
+}
+
+.date-input:focus {
+  border-color: var(--gold);
+  outline: none;
+  box-shadow: #333;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Add your own icon as background */
+.date-input {
+  color: var(--text);
+  background: url('date.png') no-repeat right 10px center;
+  background-size: 20px;
 }
 
 /* =========================================================
