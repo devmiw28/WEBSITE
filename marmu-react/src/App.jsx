@@ -10,7 +10,7 @@ import BookingPage from './pages/BookingPage';
 import ServicesPage from './pages/ServicesPage';
 import FeedbackPage from './pages/FeedbackPage';
 import AdminPage from './pages/AdminPage';
-import StaffAvailabilityPage from './pages/StaffAvailabilityPage';
+import StaffAvailabilityPage from './components/StaffAvailabilityPage.jsx';
 
 // Auth Context
 import { AuthProvider, useAuth } from './context/AuthContext';

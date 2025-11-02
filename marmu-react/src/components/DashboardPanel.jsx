@@ -13,7 +13,7 @@ export default function DashboardPanel({
 
   return (
     <div className="dashboard-panel">
-      <h2>Appointment Dashboard ✨</h2>
+      <h2>Appointment Dashboard</h2>
 
       {/* Top stat cards */}
       <div className="stats-cards">
@@ -35,7 +35,7 @@ export default function DashboardPanel({
         {/* NEW: Total Clients */}
         <div className="card total-clients">
           <h3>Total Clients 👥</h3>
-          <p className="stat-number">{totalClients ?? 0}</p>
+          <p className="stat-clients">{totalClients ?? 0}</p>
         </div>
       </div>
 

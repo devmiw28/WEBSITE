@@ -93,7 +93,7 @@ export default function StaffAvailabilityPage() {
 
     return (
         <div className="availability-page">
-            <h2>🗓️ Set Staff Availability</h2>
+            <h2>Set Staff Availability</h2>
 
             {/* 🧑‍💼 Admin View */}
             {user.role === "Admin" ? (
@@ -154,7 +154,7 @@ export default function StaffAvailabilityPage() {
             ) : (
                 <>
                     <p className="availability-note">Default working hours are assumed. Click to mark UNAVAILABLE.</p>
-                    <button onClick={handleSave}>Save Unavailable Times</button>
+                    <button className="save-btn" onClick={handleSave}>Save</button>
                 </>
             )}
         </div>

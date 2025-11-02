@@ -6,7 +6,7 @@ import { API_BASE_URL } from '../App';
 import AdminAddUserModal from '../components/AdminAddUserModal';
 import AdminReplyModal from '../components/AdminReplyModal';
 import DashboardPanel from '../components/DashboardPanel';
-import StaffAvailabilityPage from '../pages/StaffAvailabilityPage';
+import StaffAvailabilityPage from '../components/StaffAvailabilityPage';
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -620,7 +620,7 @@ export default function AdminPage() {
 
         {activePanel === 'appointments' && (
           <div>
-            <h2>Appointments</h2>
+            <h2 className='admin-titles'>Appointments</h2>
             {loading ? (
               <p>Loading...</p>
             ) : (
@@ -769,7 +769,7 @@ export default function AdminPage() {
 
         {activePanel === 'history' && (
           <div>
-            <h2>Appointment History</h2>
+            <h2 className='admin-titles'>Appointment History</h2>
             {loading ? (
               <p>Loading...</p>
             ) : (
@@ -861,9 +861,9 @@ export default function AdminPage() {
 
         {activePanel === 'users' && isAdmin && (
           <div>
-            <h2>Users</h2>
+            <h2 className='admin-titles'>Users</h2>
             <button
-              className="action-btn approve"
+              className="add-user"
               onClick={() => setShowAddUserModal(true)}
             >
               ➕ Add New User
@@ -955,7 +955,7 @@ export default function AdminPage() {
 
         {activePanel === 'feedback' && (
           <>
-            <h2>View Feedback</h2>
+            <h2 className='admin-titles'>View Feedback</h2>
             {loading ? (
               <p>Loading...</p>
             ) : (

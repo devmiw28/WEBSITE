@@ -12,6 +12,14 @@ body.dark-mode {
   height: 100vh;
 }
 
+.admin-titles {
+  color: var(--gold);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
 /* 🧭 SIDEBAR */
 .sidebar {
   width: 220px;
@@ -25,18 +33,19 @@ body.dark-mode {
 
 .sidebar h2 {
   text-align: center;
-  color: #00aaff;
+  color: var(--gold);
   margin-bottom: 25px;
   text-transform: uppercase;
   font-size: 1.4em;
 }
 
 .menu-btn {
-  background: #424242;
-  color: white;
+  background: #212121;
+  color: var(--gold);
   border: none;
   padding: 12px;
   margin: 5px 0;
+  border: 1px solid var(--gold);
   border-radius: 6px;
   cursor: pointer;
   text-align: left;
@@ -50,13 +59,14 @@ body.dark-mode {
 
 /* Active Panel Highlight */
 .menu-btn.active-menu-btn {
-  background: #00aaff;
-  color: #212121;
+  background: var(--gold);
+  color: var(--text);
   font-weight: bold;
+  border: 1px solid var(--gold);
 }
 
 .menu-btn.active-menu-btn:hover {
-  background: #0099e6;
+  background: var(--gold);
 }
 
 .logout-btn {
@@ -93,7 +103,7 @@ body.dark-mode {
 }
 
 .dashboard-panel h2 {
-  color: #00aaff;
+  color: var(--gold);
   border-bottom: 2px solid #444;
   padding-bottom: 10px;
   margin-bottom: 25px;
@@ -131,22 +141,39 @@ body.dark-mode {
 }
 
 .stat-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 2.2rem;
   font-weight: bold;
-  color: #00aaff;
+  color: var(--gold);
   display: block;
 }
 
+.stat-clients {
+  margin-top: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: var(--gold);
+}
+
 .card.total-appointments {
-  border-left-color: #00aaff;
+  border-left-color: var(--gold);
 }
 
 .card.pending-appointments {
-  border-left-color: #ffc107;
+  border-left-color: var(--gold);
 }
 
 .card.approved-appointments {
-  border-left-color: #28a745;
+  border-left-color: var(--gold);
+}
+
+.card.total-clients {
+  border-left-color: var(--gold);
 }
 
 /* 📈 MONTHLY REPORT SECTION */
@@ -172,7 +199,8 @@ body.dark-mode {
   justify-content: space-around;
   align-items: center;
   gap: 30px;
-  flex-wrap: wrap; /* responsive for smaller screens */
+  flex-wrap: wrap;
+  /* responsive for smaller screens */
 }
 
 .service-list {
@@ -248,7 +276,7 @@ body.dark-mode {
   color: #ddd;
 }
 
-.show-page{
+.show-page {
   margin-left: auto;
   align-self: center;
   color: #bbb;
@@ -335,6 +363,26 @@ body.dark-mode {
   transition: opacity 0.2s;
 }
 
+.add-user{
+  padding: 8px 16px;
+  font-size: 14px;
+  margin: 5px 3px;
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--gold);
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.add-user:hover{
+  background: var(--gold);
+}
+
+
 .action-btn:hover {
   opacity: 0.85;
 }
@@ -409,7 +457,7 @@ body.dark-mode {
 .modal h3,
 .modal h2 {
   margin-bottom: 15px;
-  color: #00aaff;
+  color: var(--gold);
   text-align: center;
 }
 
@@ -513,6 +561,7 @@ body.dark-mode {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -523,6 +572,7 @@ body.dark-mode {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);

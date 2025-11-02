@@ -24,7 +24,7 @@
 }
 
 .availability-page h2 {
-  color: #d4af37;
+  color: var(--gold);
   font-size: 1.3rem;
   margin: 25px 0 15px;
   text-transform: uppercase;
@@ -79,12 +79,12 @@
 
 .time-grid button:hover {
   background: #3a3a3a;
-  border-color: #d4af37;
+  border-color: var(--gold);
 }
 
 .time-grid button.selected {
-  background: #00c853;
-  border-color: #00c853;
+  background: #dc3545;
+  border-color: var(--bg);
   color: white;
   font-weight: bold;
 }
@@ -148,9 +148,11 @@
   justify-content: center;
 }
 
-.availability-actions button {
+.save-btn {
+  background: var(--bg);
+  color: var(--text);
   padding: 12px 30px;
-  border: none;
+  border: 1px solid var(--gold);
   border-radius: 6px;
   font-weight: bold;
   font-size: 1rem;
@@ -160,14 +162,8 @@
   letter-spacing: 1px;
 }
 
-.save-btn {
-  background: #00c853;
-  color: white;
-}
-
 .save-btn:hover {
-  background: #00a043;
-  box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
+  background: var(--gold);
 }
 
 .cancel-btn {
