@@ -165,6 +165,25 @@
   font-family: inherit;
 }
 
+.unavailability-list {
+  margin-top: 2rem;
+}
+
+.unavailability-list table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.unavailability-list th,
+.unavailability-list td {
+  background: #333  ;
+  border: 1px solid var(--gold);
+  color: #cacaca;
+  padding: 8px;
+  text-align: left;
+}
+
+
 /* =========================================================
    ACTION BUTTONS
 ========================================================= */
@@ -258,9 +277,20 @@
 }
 
 @keyframes dots {
-  0%, 20% { content: '.'; }
-  40% { content: '..'; }
-  60%, 100% { content: '...'; }
+
+  0%,
+  20% {
+    content: '.';
+  }
+
+  40% {
+    content: '..';
+  }
+
+  60%,
+  100% {
+    content: '...';
+  }
 }
 
 /* =========================================================
@@ -271,20 +301,20 @@
     padding: 15px;
     margin: 10px;
   }
-  
+
   .availability-page h1 {
     font-size: 1.5rem;
   }
-  
+
   .time-grid {
     grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
     gap: 8px;
   }
-  
+
   .availability-actions {
     flex-direction: column;
   }
-  
+
   .availability-actions button {
     width: 100%;
   }
@@ -294,7 +324,7 @@
   .time-grid {
     grid-template-columns: repeat(3, 1fr);
   }
-  
+
   .time-grid button {
     font-size: 0.8rem;
     padding: 6px;

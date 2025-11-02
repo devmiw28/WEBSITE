@@ -565,7 +565,7 @@ export default function AdminPage() {
           className={`menu-btn ${activePanel === 'availability' ? 'active-menu-btn' : ''}`}
           onClick={() => setActivePanel('availability')}
         >
-          Staff Availability
+          Staff Unavailability
         </button>
         <button
           className={`menu-btn ${activePanel === 'appointments' ? 'active-menu-btn' : ''}`}

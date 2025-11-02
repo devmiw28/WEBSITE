@@ -486,41 +486,38 @@ def reset_password():
 # =========================================
 # BOOKINGS
 # =========================================
-
-@app.route("/staff/availability", methods=["POST"])
-def add_availability():
+@app.route("/staff/unavailability", methods=["POST"])
+def add_unavailability():
     data = request.get_json()
     staff_id = data.get('staff_id')
-    available_date = data.get('available_date')
-    available_times = data.get('available_times', [])
+    unavailable_date = data.get('unavailable_date')
+    unavailable_times = data.get('unavailable_times', [])
 
-    if not staff_id or not available_date or not available_times:
+    if not staff_id or not unavailable_date or not unavailable_times:
         return jsonify({"error": "Missing required fields"}), 400
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Clear any existing availability for this staff and date to prevent duplicates/overlaps
     try:
         cursor.execute(
-            "DELETE FROM tbl_staff_availability WHERE staff_id = %s AND available_date = %s",
-            (staff_id, available_date),
+            "DELETE FROM tbl_staff_unavailability WHERE staff_id = %s AND unavailable_date = %s",
+            (staff_id, unavailable_date),
         )
     except Exception:
-        # Continue even if nothing to delete
         pass
 
-    for time in available_times:
+    for time in unavailable_times:
         cursor.execute("""
-            INSERT INTO tbl_staff_availability (staff_id, available_date, available_time)
+            INSERT INTO tbl_staff_unavailability (staff_id, unavailable_date, unavailable_time)
             VALUES (%s, %s, %s)
-        """, (staff_id, available_date, time))
+        """, (staff_id, unavailable_date, time))
 
     conn.commit()
     cursor.close()
     conn.close()
 
-    return jsonify({"message": "Availability saved successfully"}), 201
+    return jsonify({"message": "Unavailability saved successfully"}), 201
 
 @app.route("/staff/<service>", methods=["GET"])
 def get_staff_by_service(service):
@@ -1055,6 +1052,24 @@ def update_appointment(id):
                 conn.close()
         except Exception:
             pass
+
+@app.route("/staff/unavailability/list", methods=["GET"])
+def get_staff_unavailability_list():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT tsu.*, tu.fullname AS staff_name
+        FROM tbl_staff_unavailability tsu
+        JOIN tbl_users tu ON tsu.staff_id = tu.id
+        WHERE tu.role IN ('Barber', 'TattooArtist')
+    """)
+
+    results = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify(results), 200
 
 @app.route("/admin/users", methods=["GET"])
 def get_users():

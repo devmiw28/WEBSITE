@@ -5,15 +5,16 @@ import { useAuth } from "../context/AuthContext";
 import "../css/staffavailability.css";
 
 export default function StaffAvailabilityPage() {
-    const { user } = useAuth(); 
+    const { user } = useAuth();
     const [date, setDate] = useState("");
     const [unavailableTimes, setUnavailableTimes] = useState([]);
-    const [role, setRole] = useState(""); 
+    const [role, setRole] = useState("");
     const [staffList, setStaffList] = useState([]);
     const [selectedStaff, setSelectedStaff] = useState("");
     const [saving, setSaving] = useState(false);
     const [hasSaved, setHasSaved] = useState(false);
     const todayIso = useMemo(() => new Date().toISOString().split('T')[0], []);
+    const [unavailabilityList, setUnavailabilityList] = useState([]);
 
     useEffect(() => {
         if (user.role === "Admin" && role) {
@@ -24,6 +25,14 @@ export default function StaffAvailabilityPage() {
         }
     }, [role, user.role]);
 
+    useEffect(() => {
+        fetch(`${API_BASE_URL}/api/staff/unavailability/list`)
+            .then((res) => res.json())
+            .then((data) => {
+                setUnavailabilityList(data); 
+            })
+            .catch((err) => console.error("Error loading unavailability list:", err));
+    }, []);
 
     const handleToggleTime = (time) => {
         if (hasSaved) setHasSaved(false);
@@ -80,7 +89,7 @@ export default function StaffAvailabilityPage() {
 
         const text = await res.text();
         let data = {};
-        try { data = text ? JSON.parse(text) : {}; } catch {}
+        try { data = text ? JSON.parse(text) : {}; } catch { }
         alert(data.message || `Error saving availability (${res.status})`);
         setUnavailableTimes([]);
         setHasSaved(true);
@@ -107,7 +116,7 @@ export default function StaffAvailabilityPage() {
 
     return (
         <div className="availability-page">
-            <h2>Set Staff Availability</h2>
+            <h2>Set Staff Unavailability</h2>
 
             {/* 🧑‍💼 Admin View */}
             {user.role === "Admin" ? (
@@ -148,7 +157,7 @@ export default function StaffAvailabilityPage() {
 
             {/* 📅 Date Picker */}
             <label>Select Date:</label>
-            <input className="date-input" type="date" value={date} min={todayIso} onChange={(e) => { setHasSaved(false); setDate(e.target.value); }}/>
+            <input className="date-input" type="date" value={date} min={todayIso} onChange={(e) => { setHasSaved(false); setDate(e.target.value); }} />
 
             {/* ⏰ Time Slots */}
             <div className="time-grid">
@@ -174,6 +183,30 @@ export default function StaffAvailabilityPage() {
                         </button>
                     )}
                 </>
+            )}
+
+            {unavailabilityList.length > 0 && (
+                <div className="unavailability-list">
+                    <h3>Staff Unavailability Records</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Staff Name</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {unavailabilityList.map((entry, index) => (
+                                <tr key={index}>
+                                    <td>{entry.staff_name}</td>
+                                    <td>{new Date(entry.unavailable_date).toLocaleDateString("en-PH")}</td>
+                                    <td>{entry.unavailable_time}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );
