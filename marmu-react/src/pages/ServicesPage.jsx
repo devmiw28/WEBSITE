@@ -201,7 +201,7 @@ export default function ServicesPage() {
           <div className="footer-column">
             <h4>Opening Time</h4>
             <p>Monday to Friday<br />9am - 9pm</p>
-            <p>Saturday<br />9am - 2pm</p>
+            <p>Saturday<br />9am - 5pm</p>
           </div>
         </div>
 
