@@ -38,7 +38,7 @@ export default function BookingPage() {
     document.body.className = newTheme;
   };
 
-  // Fetch staff list when service changes
+  // fetch staff list when service changes
   useEffect(() => {
     if (formData.service) {
       fetch(`${API_BASE_URL}/api/staff/${formData.service}`)
@@ -50,7 +50,7 @@ export default function BookingPage() {
     }
   }, [formData.service]);
 
-  // Fetch available times when date or staff changes
+  // fetch available times when date or staff changes
   useEffect(() => {
     if (formData.date && formData.staff_id) {
       fetch(
@@ -76,7 +76,6 @@ export default function BookingPage() {
 
     setLoading(true);
 
-    // Enforce frontend double-check of 1-per-service-per-2-weeks rule
     try {
       const resp = await fetch(`${API_BASE_URL}/api/appointments/${user.username}`);
       if (!resp.ok) {
@@ -109,10 +108,8 @@ export default function BookingPage() {
       }
     } catch (err) {
       console.error("Failed to validate booking limit:", err);
-      // Allow submission to continue; server will enforce as well
     }
 
-    // Submit the booking data to the server
     try {
       const response = await fetch(`${API_BASE_URL}/api/bookings`, {
         method: "POST",
@@ -130,10 +127,18 @@ export default function BookingPage() {
         setLoading(false);
         return;
       }
-      
+
       const data = await response.json();
       alert(data.message || 'Booking successful!');
-      // Handle success, e.g., redirect user or update UI state
+      setFormData({
+        service: "",
+        staff_id: "",
+        date: "",
+        time: "",
+        remarks: "",
+      });
+      navigate('/');
+
     } catch (error) {
       console.error("Error during booking:", error);
       alert("An error occurred while submitting your booking. Please try again later.");
@@ -245,7 +250,6 @@ export default function BookingPage() {
       <footer>
         <h3>Marmu Barber & Tattoo Shop</h3>
 
-        {/* Placeholder icons for social media, assuming you'll use Font Awesome */}
         <div className="social-icons">
           <a href="#" aria-label="Instagram">
             <img src="/assets/instagram.png" alt="Instagram" />
