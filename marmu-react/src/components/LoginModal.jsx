@@ -34,7 +34,7 @@ export default function LoginModal({ isOpen, onClose, switchToSignup, switchToFo
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -47,16 +47,17 @@ export default function LoginModal({ isOpen, onClose, switchToSignup, switchToFo
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
-        throw new Error(`Unexpected response (${response.status}): ${text?.slice(0,200) || 'empty body'}`);
+        throw new Error(`Unexpected response (${response.status}): ${text?.slice(0, 200) || 'empty body'}`);
       }
       if (!response.ok) throw new Error(data.error || 'Login failed');
 
-      login({
-        username: data.username,
-        fullname: data.fullname,
-        role: data.role,
-        email: data.email
-      });
+      if (data.user) {
+        login(data.user);
+        onClose();
+        navigate(data.user.role === 'Admin' ? '/admin' : '/', { replace: true });
+      } else {
+        throw new Error('Invalid response from server');
+      }
 
       onClose();
       navigate(data.role === 'Admin' ? '/admin' : '/', { replace: true });

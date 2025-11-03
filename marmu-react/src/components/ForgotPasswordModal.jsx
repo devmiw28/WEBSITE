@@ -72,7 +72,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, switchToLogin }) 
     try {
       // Use /api/api so the proxy rewrite removes only the first /api,
       // reaching backend /api/reset_password
-      const response = await fetch(`${API_BASE_URL}/api/api/reset_password`, {
+      const response = await fetch(`POST ${API_BASE_URL}/api/auth/change_password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -41,7 +41,7 @@ export default function BookingPage() {
   // fetch staff list when service changes
   useEffect(() => {
     if (formData.service) {
-      fetch(`${API_BASE_URL}/api/staff/${formData.service}`)
+      fetch(`${API_BASE_URL}/api/staff/by-service/${formData.service}`)
         .then((res) => res.json())
         .then(setStaffList)
         .catch((err) => console.error("Error fetching staff:", err));
@@ -54,7 +54,7 @@ export default function BookingPage() {
   useEffect(() => {
     if (formData.date && formData.staff_id) {
       fetch(
-        `${API_BASE_URL}/api/appointments/available_slots?date=${formData.date}&staff_id=${formData.staff_id}`
+        `${API_BASE_URL}/api/bookings/available_slots?date=${formData.date}&staff_id=${formData.staff_id}`
       )
         .then((res) => res.json())
         .then((data) => setAvailableTimes(data.available_times || []))
@@ -77,10 +77,11 @@ export default function BookingPage() {
     setLoading(true);
 
     try {
-      const resp = await fetch(`${API_BASE_URL}/api/appointments/${user.username}`);
+      // validate booking limit
+      const resp = await fetch(`${API_BASE_URL}/api/bookings/user/${user.username}`);
       if (!resp.ok) {
         const errorData = await resp.json();
-        alert(`Error: ${errorData.error || 'Failed to validate booking limit'}`);
+        alert(`Error: ${errorData.error || "Failed to validate booking limit"}`);
         setLoading(false);
         return;
       }
@@ -96,13 +97,15 @@ export default function BookingPage() {
 
           const dt = new Date(`${a.appointment_date}T${a.time}:00`);
           return dt >= twoWeeksAgo && a.status !== "Cancelled";
-        } catch (e) {
+        } catch {
           return false;
         }
       });
 
       if (hasRecent) {
-        alert(`⚠️ You already have a ${formData.service} booked within the last 2 weeks. Please wait before booking another.`);
+        alert(
+          `⚠️ You already have a ${formData.service} booked within the last 2 weeks. Please wait before booking another.`
+        );
         setLoading(false);
         return;
       }
@@ -123,13 +126,13 @@ export default function BookingPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        alert(`Error: ${errorData.error || 'Booking failed'}`);
+        alert(`Error: ${errorData.error || "Booking failed"}`);
         setLoading(false);
         return;
       }
 
       const data = await response.json();
-      alert(data.message || 'Booking successful!');
+      alert(data.message || "Booking successful!");
       setFormData({
         service: "",
         staff_id: "",
@@ -137,8 +140,7 @@ export default function BookingPage() {
         time: "",
         remarks: "",
       });
-      navigate('/');
-
+      navigate("/");
     } catch (error) {
       console.error("Error during booking:", error);
       alert("An error occurred while submitting your booking. Please try again later.");
@@ -219,8 +221,8 @@ export default function BookingPage() {
                 {!formData.staff_id
                   ? "-- Select Time --"
                   : availableTimes.length === 0
-                    ? "-- No Slots Available --"
-                    : "-- Select Time --"}
+                  ? "-- No Slots Available --"
+                  : "-- Select Time --"}
               </option>
               {availableTimes.map((time) => (
                 <option key={time} value={time}>
@@ -249,7 +251,6 @@ export default function BookingPage() {
 
       <footer>
         <h3>Marmu Barber & Tattoo Shop</h3>
-
         <div className="social-icons">
           <a href="#" aria-label="Instagram">
             <img src="/assets/instagram.png" alt="Instagram" />
@@ -261,7 +262,6 @@ export default function BookingPage() {
             <img src="/assets/mail.png" alt="Mail" />
           </a>
         </div>
-
         <div className="footer-content">
           <div className="footer-column">
             <h4>Location</h4>

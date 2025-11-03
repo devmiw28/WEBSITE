@@ -23,7 +23,7 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
 
   const loadAppointments = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/appointments/${user.username}`, {
+      const response = await fetch(`${API_BASE_URL}/api/bookings/user/${user.username}`, {
         credentials: 'include'
       });
       if (!response.ok) {
@@ -101,7 +101,7 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
                               if (!confirm('Cancel this appointment?')) return;
                               setCancellingIds(prev => ({ ...prev, [apt.id]: true }));
                               try {
-                                const res = await fetch(`${API_BASE_URL}/api/appointments/${apt.id}/cancel`, {
+                                const res = await fetch(`${API_BASE_URL}/api/bookings/${apt.id}/cancel`, {
                                   method: 'POST',
                                   credentials: 'include'
                                 });

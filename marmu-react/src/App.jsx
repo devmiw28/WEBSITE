@@ -15,8 +15,6 @@ import StaffAvailabilityPage from './components/StaffAvailabilityPage.jsx';
 // Auth Context
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Keep base empty; components append '/api/..' where needed.
-// Override with VITE_API_BASE_URL for production or custom setups.
 const API_BASE_URL = import.meta?.env?.VITE_API_BASE_URL ?? '';
 
 // Protected Route Component
@@ -28,7 +26,7 @@ function ProtectedRoute({ children, adminOnly = false, onLoginRequired }) {
   }
 
   if (!user) {
-    onLoginRequired?.(); // open login modal
+    onLoginRequired?.(); 
     return null;
   }
 

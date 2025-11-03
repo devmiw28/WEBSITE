@@ -577,7 +577,7 @@ export default function AdminPage() {
             className={`menu-btn ${activePanel === 'users' ? 'active-menu-btn' : ''}`}
             onClick={() => setActivePanel('users')}
           >
-            Users
+            Users Account
           </button>
         )}
         <button
@@ -853,7 +853,7 @@ export default function AdminPage() {
 
         {activePanel === 'users' && isAdmin && (
           <div>
-            <h2 className='admin-titles'>Users</h2>
+            <h2 className='admin-titles'>Users Account</h2>
             <button
               className="add-user"
               onClick={() => setShowAddUserModal(true)}

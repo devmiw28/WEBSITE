@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     // Use a different port than the Flask backend
-    port: 5173,
+    port: 5000,
     proxy: {
       // Proxy API calls to the Flask backend
       '/api': {

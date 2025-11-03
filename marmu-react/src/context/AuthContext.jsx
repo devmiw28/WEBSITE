@@ -1,5 +1,6 @@
 // context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
+import { API_BASE_URL } from '../App';
 
 const AuthContext = createContext(null);
 
@@ -8,21 +9,37 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
-    const storedFullname = localStorage.getItem('fullname');
-    const storedRole = localStorage.getItem('role');
-    const storedEmail = localStorage.getItem('email');
+    const fetchCurrentUser = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/current_user`, {
+          credentials: 'include'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user) {
+            setUser(data.user);
+            // sync localStorage too
+            localStorage.setItem('username', data.user.username);
+            localStorage.setItem('fullname', data.user.fullname);
+            localStorage.setItem('role', data.user.role);
+            if (data.user.email) {
+              localStorage.setItem('email', data.user.email);
+            }
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch current user:", err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (storedUsername && storedFullname) {
-      setUser({
-        username: storedUsername,
-        fullname: storedFullname,
-        role: storedRole,
-        email: storedEmail
-      });
-    }
-    setLoading(false);
+    fetchCurrentUser();
   }, []);
+
 
   const login = (userData) => {
     setUser(userData);
@@ -42,7 +59,30 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('email');
   };
 
-  // Check whether current user has any of the provided roles (case-insensitive)
+  // 🔑 New: call backend login API
+  const loginRequest = async (username, password) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Login failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      // Expect backend to return { user: { username, fullname, role, email }, message: "..." }
+      login(data.user);
+      return { success: true, user: data.user };
+    } catch (err) {
+      console.error('Login error:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
   const hasAnyRole = (roles = []) => {
     if (!user || !user.role) return false;
     const cur = user.role.toLowerCase();
@@ -50,7 +90,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, hasAnyRole }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, loginRequest, hasAnyRole }}>
       {children}
     </AuthContext.Provider>
   );
