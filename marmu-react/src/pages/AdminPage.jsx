@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { parse } from 'date-fns';
 import { API_BASE_URL } from '../App';
 import AdminAddUserModal from '../components/AdminAddUserModal';
 import AdminReplyModal from '../components/AdminReplyModal';
@@ -20,7 +21,7 @@ export default function AdminPage() {
   const [pendingFeedbackIds, setPendingFeedbackIds] = useState({});
   const [users, setUsers] = useState([]);
   const [feedback, setFeedback] = useState([]);
-  // UI controls: filters, sorts, search for tables
+
   const [appointmentsFilter, setAppointmentsFilter] = useState('all');
   const [appointmentsSort, setAppointmentsSort] = useState('date');
   const [appointmentsSortDirection, setAppointmentsSortDirection] = useState('asc');
@@ -70,7 +71,7 @@ export default function AdminPage() {
   const [notifications, setNotifications] = useState(null);
   const [artistPerformance, setArtistPerformance] = useState(null);
 
-  // Debounce hook for search inputs (declare before effects that reference debounced values)
+  // Debounce hook for search 
   function useDebounced(value, delay = 400) {
     const [debounced, setDebounced] = useState(value);
     useEffect(() => {
@@ -85,437 +86,429 @@ export default function AdminPage() {
   const debouncedUsersSearch = useDebounced(usersSearch, 450);
   const debouncedFeedbackSearch = useDebounced(feedbackSearch, 450);
 
-      useEffect(() => {
-        loadPanelData();
-        loadDashboardData();
-      }, [activePanel]);
+  useEffect(() => {
+    loadPanelData();
+    loadDashboardData();
+  }, [activePanel]);
 
-      // Reload appointments when related controls change
-      useEffect(() => {
-        if (activePanel === 'appointments') {
-          // If we temporarily cleared the select to detect re-selection, skip this intermediate state
-          if (appointmentsSuppressRef.current) {
-            appointmentsSuppressRef.current = false;
-            return;
-          }
-          // reset to first page when filters/search change
-          setAppointmentsPage(1);
-          loadAppointments();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [activePanel, appointmentsFilter, appointmentsSort, debouncedAppointmentsSearch, isStaff, isAdmin]);
+  useEffect(() => {
+    // Only reload appointments if the active panel is 'appointments' and we're not currently suppressing the reload
+    if (activePanel === 'appointments') {
+      if (appointmentsSuppressRef.current) {
+        appointmentsSuppressRef.current = false;
+        return;
+      }
+      setAppointmentsPage(1); // Reset page number to 1 if needed
+      loadAppointments();
+    }
+  }, [
+    activePanel,
+    appointmentsFilter,
+    appointmentsSort,
+    debouncedAppointmentsSearch,
+    isStaff,
+    isAdmin,
+  ]);
 
-      useEffect(() => {
-        if (activePanel === 'appointments') loadAppointments();
-      }, [appointmentsPage, appointmentsFilter, appointmentsSort, appointmentsSortDirection]);
+  useEffect(() => {
+    if (activePanel === 'history') {
+      if (historySuppressRef.current) {
+        historySuppressRef.current = false;
+        return;
+      }
+      setHistoryPage(1);
+      loadHistory();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePanel, historyFilter, historySort, debouncedHistorySearch, isStaff, isAdmin]);
 
+  // Users
+  useEffect(() => {
+    if (activePanel !== 'users') return;
 
-      // Reload history when related controls change
-      useEffect(() => {
-        if (activePanel === 'history') {
-          if (historySuppressRef.current) {
-            historySuppressRef.current = false;
-            return;
-          }
-          setHistoryPage(1);
-          loadHistory();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [activePanel, historyFilter, historySort, debouncedHistorySearch, isStaff, isAdmin]);
+    if (usersSuppressRef.current) {
+      usersSuppressRef.current = false;
+      return;
+    }
 
-      useEffect(() => {
-        if (activePanel === 'history') loadHistory();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [historyPage]);
+    loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePanel, usersFilter, usersSort, usersPage, debouncedUsersSearch]);
 
-      // Users
-      useEffect(() => {
-        if (activePanel !== 'users') return;
-
-        if (usersSuppressRef.current) {
-          usersSuppressRef.current = false;
-          return;
-        }
-
-        loadUsers();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [activePanel, usersFilter, usersSort, usersPage, debouncedUsersSearch]);
-
-      // Feedback
-      useEffect(() => {
-        if (activePanel === 'feedback') {
-          if (feedbackSuppressRef.current) {
-            feedbackSuppressRef.current = false;
-            return;
-          }
-          setFeedbackPage(1);
-          loadFeedback();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [activePanel, feedbackFilter, feedbackSort, debouncedFeedbackSearch]);
-      useEffect(() => { if (activePanel === 'feedback') loadFeedback(); /* eslint-disable-line */ }, [feedbackPage]);
+  // Feedback
+  useEffect(() => {
+    if (activePanel === 'feedback') {
+      if (feedbackSuppressRef.current) {
+        feedbackSuppressRef.current = false;
+        return;
+      }
+      setFeedbackPage(1);
+      loadFeedback();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePanel, feedbackFilter, feedbackSort, debouncedFeedbackSearch]);
+  useEffect(() => { if (activePanel === 'feedback') loadFeedback(); /* eslint-disable-line */ }, [feedbackPage]);
 
 
 
-      const loadPanelData = () => {
-        if (activePanel === 'appointments') loadAppointments();
-        else if (activePanel === 'users') loadUsers();
-        else if (activePanel === 'feedback') loadFeedback();
-        else if (activePanel === 'history') loadHistory();
-        else if (activePanel === 'dashboard') {
-          loadSummary();
-          loadMonthlyReport();
-        }
-      };
+  const loadPanelData = () => {
+    if (activePanel === 'appointments') loadAppointments();
+    else if (activePanel === 'users') loadUsers();
+    else if (activePanel === 'feedback') loadFeedback();
+    else if (activePanel === 'history') loadHistory();
+    else if (activePanel === 'dashboard') {
+      loadSummary();
+      loadMonthlyReport();
+    }
+  };
 
-      const loadHistory = async () => {
-        setLoading(true);
-        try {
-          const params = new URLSearchParams();
-          params.append('page', historyPage);
-          params.append('per_page', historyPerPage);
-          params.append('history_only', '1');
-          if (historyFilter !== 'all') params.append('status', historyFilter);
-          if (debouncedHistorySearch) params.append('q', debouncedHistorySearch);
-          if (historySort) params.append('sort', historySort + (historySortDirection === 'desc' ? '_desc' : ''));
-          if (isStaff && !isAdmin && user?.fullname) params.append('artist', user.fullname);
+  const loadHistory = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append('page', historyPage);
+      params.append('per_page', historyPerPage);
+      params.append('history_only', '1');
+      if (historyFilter !== 'all') params.append('status', historyFilter);
+      if (debouncedHistorySearch) params.append('q', debouncedHistorySearch);
+      if (historySort) params.append('sort', historySort + (historySortDirection === 'desc' ? '_desc' : ''));
+      if (isStaff && !isAdmin && user?.fullname) params.append('artist', user.fullname);
 
-          const url = `${API_BASE_URL}/api/admin/appointments?${params.toString()}`;
-          const res = await fetch(url, { credentials: 'include' });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const payload = await res.json();
-          const data = payload.data || [];
-          setHistoryAppointments(data);
-          setHistoryTotal(payload.total || 0);
-        } catch (err) {
-          console.error('Error loading history:', err);
-        } finally {
-          setLoading(false);
-        }
-      };
+      const url = `${API_BASE_URL}/api/admin/appointments?${params.toString()}`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const payload = await res.json();
+      const data = payload.data || [];
+      setHistoryAppointments(data);
+      setHistoryTotal(payload.total || 0);
+    } catch (err) {
+      console.error('Error loading history:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const loadDashboardData = async () => {
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/admin/dashboard-data`, { credentials: 'include' });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const _text0 = await res.text();
-          let data = {};
-          try { data = _text0 ? JSON.parse(_text0) : {}; } catch { throw new Error(`Unexpected response (${res.status})`); }
-          setTotalClients(data.total_clients ?? 0);
-          setNotifications(data.notifications ?? { pending_appointments: 0, new_feedback: 0 });
-          setArtistPerformance(data.artist_performance ?? []);
-        } catch (e) {
-          console.error('Failed to load dashboard data', e);
-          setTotalClients(0);
-          setNotifications({ pending_appointments: 0, new_feedback: 0 });
-          setArtistPerformance([]);
-        }
-      };
+  const loadDashboardData = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/dashboard-data`, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const _text0 = await res.text();
+      let data = {};
+      try { data = _text0 ? JSON.parse(_text0) : {}; } catch { throw new Error(`Unexpected response (${res.status})`); }
+      setTotalClients(data.total_clients ?? 0);
+      setNotifications(data.notifications ?? { pending_appointments: 0, new_feedback: 0 });
+      setArtistPerformance(data.artist_performance ?? []);
+    } catch (e) {
+      console.error('Failed to load dashboard data', e);
+      setTotalClients(0);
+      setNotifications({ pending_appointments: 0, new_feedback: 0 });
+      setArtistPerformance([]);
+    }
+  };
 
-      const loadSummary = async () => {
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/admin/appointments/summary`, { credentials: 'include' });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const _text1 = await res.text();
-          let data = {};
-          try { data = _text1 ? JSON.parse(_text1) : {}; } catch { throw new Error(`Unexpected response (${res.status})`); }
-          setSummary(data);
-        } catch (e) {
-          console.error('Failed to load summary', e);
-        }
-      };
+  const loadSummary = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/appointments/summary`, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const _text1 = await res.text();
+      let data = {};
+      try { data = _text1 ? JSON.parse(_text1) : {}; } catch { throw new Error(`Unexpected response (${res.status})`); }
+      setSummary(data);
+    } catch (e) {
+      console.error('Failed to load summary', e);
+    }
+  };
 
-      const loadMonthlyReport = async () => {
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/admin/appointments/monthly-report`, { credentials: 'include' });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const _text2 = await res.text();
-          let data = {};
-          try { data = _text2 ? JSON.parse(_text2) : {}; } catch { throw new Error(`Unexpected response (${res.status})`); }
-          setMonthlyReport(data);
-        } catch (e) {
-          console.error('Failed to load monthly report', e);
-        }
-      };
+  const loadMonthlyReport = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/appointments/monthly-report`, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const _text2 = await res.text();
+      let data = {};
+      try { data = _text2 ? JSON.parse(_text2) : {}; } catch { throw new Error(`Unexpected response (${res.status})`); }
+      setMonthlyReport(data);
+    } catch (e) {
+      console.error('Failed to load monthly report', e);
+    }
+  };
 
-      const loadAppointments = async () => {
-        setLoading(true);
-        try {
-          const params = new URLSearchParams();
-          params.append("page", appointmentsPage);
-          params.append("per_page", appointmentsPerPage);
+  const loadAppointments = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append("page", appointmentsPage);
+      params.append("per_page", appointmentsPerPage);
 
-          if (appointmentsFilter && appointmentsFilter.toLowerCase() !== "all") {
-            params.append("status", appointmentsFilter.toLowerCase());
-          }
+      if (appointmentsFilter && appointmentsFilter.toLowerCase() !== "all") {
+        params.append("status", appointmentsFilter.toLowerCase());
+      }
 
-          if (debouncedAppointmentsSearch)
-            params.append("q", debouncedAppointmentsSearch);
+      if (debouncedAppointmentsSearch)
+        params.append("q", debouncedAppointmentsSearch);
 
-          if (appointmentsSort)
-            params.append(
-              "sort",
-              appointmentsSort +
-              (appointmentsSortDirection === "desc" ? "_desc" : "")
-            );
+      if (appointmentsSort)
+        params.append(
+          "sort",
+          appointmentsSort + (appointmentsSortDirection === "desc" ? "_desc" : "")
+        );
 
-          if (isStaff && !isAdmin && user?.fullname)
-            params.append("artist", user.fullname);
+      if (isStaff && !isAdmin && user?.fullname)
+        params.append("artist", user.fullname);
 
-          const url = `${API_BASE_URL}/api/admin/appointments?${params.toString()}`;
-          const res = await fetch(url, { credentials: "include" });
-          const payload = await res.json();
+      const url = `${API_BASE_URL}/api/admin/appointments?${params.toString()}`;
+      const res = await fetch(url, { credentials: "include" });
+      const payload = await res.json();
 
-          setAppointments(payload.data || []);
-          setAppointmentsTotal(payload.total || 0);
-        } catch (err) {
-          console.error("Error loading appointments:", err);
-        } finally {
-          setLoading(false);
-        }
-      };
+      setAppointments(payload.data || []);
+      setAppointmentsTotal(payload.total || 0);
+    } catch (err) {
+      console.error("Error loading appointments:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const updateAppointmentStatus = async (id, status) => {
-        setPendingActions(prev => ({ ...prev, [id]: true }));
-        try {
-          const response = await fetch(`${API_BASE_URL}/api/admin/appointments/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ status })
-          });
+   const updateAppointmentStatus = async (id, status) => {
+    setPendingActions(prev => ({ ...prev, [id]: true }));
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/appointments/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status })
+      });
 
-          if (response.ok) {
-            alert(`✅ Appointment #${id} marked as ${status}`);
-            // reload both tabs so the updated appointment moves to history if applicable
-            await loadAppointments();
-            await loadHistory();
-          } else {
-            const t = await response.text();
-            alert(`⚠️ Error: ${t}`);
-          }
-        } catch (error) {
-          alert(`⚠️ Error: ${error.message}`);
-        } finally {
-          setPendingActions(prev => ({ ...prev, [id]: false }));
-        }
-      };
+      if (response.ok) {
+        alert(`✅ Appointment #${id} marked as ${status}`);
+        await loadAppointments();
+      } else {
+        const t = await response.text();
+        alert(`⚠️ Error: ${t}`);
+      }
+    } catch (error) {
+      alert(`⚠️ Error: ${error.message}`);
+    } finally {
+      setPendingActions(prev => ({ ...prev, [id]: false }));
+    }
+  };
 
-      // ---- Helpers for client-side filtering, sorting and searching ----
-      const parseDateTime = (a) => {
-        try {
-          // a.appointment_date expected yyyy-mm-dd, a.time expected HH:MM or H:MM
-        } catch (e) {
-          return new Date(0);
-        }
-      };
+  // ---- Helpers for client-side filtering, sorting and searching ----
+  const parseDateTime = (a) => {
+    try {
+      // a.appointment_date expected yyyy-mm-dd, a.time expected HH:MM or H:MM
+      const date = new Date(`${a.appointment_date}T${a.time}:00`);
+      return date;
+    } catch (e) {
+      return new Date(0); // Return an invalid date if there's an issue
+    }
+  };
 
-      const getFilteredAppointments = () => {
-        let list = [...appointments];
-        // filter by dropdown
-        if (appointmentsFilter !== 'all') {
-          list = list.filter(a => (a.status || '').toLowerCase() === appointmentsFilter);
-        }
-        // search
-        if (appointmentsSearch && appointmentsSearch.trim() !== '') {
-          const q = appointmentsSearch.toLowerCase();
-          list = list.filter(a => (
-            (a.fullname || '').toLowerCase().includes(q) ||
-            (a.service || '').toLowerCase().includes(q) ||
-            (a.artist_name || '').toLowerCase().includes(q) ||
-            String(a.id || '').includes(q)
-          ));
-        }
-        // sort
-        const dir = appointmentsSortDirection === 'asc' ? 1 : -1;
-        if (appointmentsSort === 'date') {
-          list.sort((x, y) => (parseDateTime(x) - parseDateTime(y)) * dir);
-        } else if (appointmentsSort === 'name') {
-          list.sort((x, y) => ((x.fullname || '').localeCompare(y.fullname || '')) * dir);
-        } else if (appointmentsSort === 'service') {
-          list.sort((x, y) => ((x.service || '').localeCompare(y.service || '')) * dir);
-        } else if (appointmentsSort === 'artist') {
-          list.sort((x, y) => ((x.artist_name || '').localeCompare(y.artist_name || '')) * dir);
-        }
-        return list;
-      };
+  const getFilteredAppointments = () => {
+    let list = [...appointments];
+    // filter by dropdown
+    if (appointmentsFilter !== 'all') {
+      list = list.filter(a => (a.status || '').toLowerCase() === appointmentsFilter);
+    }
+    // search
+    if (appointmentsSearch && appointmentsSearch.trim() !== '') {
+      const q = appointmentsSearch.toLowerCase();
+      list = list.filter(a => (
+        (a.fullname || '').toLowerCase().includes(q) ||
+        (a.service || '').toLowerCase().includes(q) ||
+        (a.artist_name || '').toLowerCase().includes(q) ||
+        String(a.id || '').includes(q)
+      ));
+    }
+    // sort
+    const dir = appointmentsSortDirection === 'asc' ? 1 : -1;
+    if (appointmentsSort === 'date') {
+      list.sort((x, y) => (parseDateTime(x) - parseDateTime(y)) * dir);
+    } else if (appointmentsSort === 'name') {
+      list.sort((x, y) => ((x.fullname || '').localeCompare(y.fullname || '')) * dir);
+    } else if (appointmentsSort === 'service') {
+      list.sort((x, y) => ((x.service || '').localeCompare(y.service || '')) * dir);
+    } else if (appointmentsSort === 'artist') {
+      list.sort((x, y) => ((x.artist_name || '').localeCompare(y.artist_name || '')) * dir);
+    }
+    return list;
+  };
 
-      const getFilteredHistory = () => {
-        let list = [...historyAppointments];
-        if (historyFilter !== 'all') {
-          list = list.filter(a => (a.status || '').toLowerCase() === historyFilter);
-        }
-        if (historySearch && historySearch.trim() !== '') {
-          const q = historySearch.toLowerCase();
-          list = list.filter(a => (
-            (a.fullname || '').toLowerCase().includes(q) ||
-            (a.service || '').toLowerCase().includes(q) ||
-            (a.artist_name || '').toLowerCase().includes(q) ||
-            String(a.id || '').includes(q)
-          ));
-        }
-        const hdir = historySortDirection === 'asc' ? 1 : -1;
-        if (historySort === 'date') list.sort((x, y) => (parseDateTime(x) - parseDateTime(y)) * hdir);
-        if (historySort === 'name') list.sort((x, y) => ((x.fullname || '').localeCompare(y.fullname || '')) * hdir);
-        return list;
-      };
+  const getFilteredHistory = () => {
+    let list = [...historyAppointments];
+    if (historyFilter !== 'all') {
+      list = list.filter(a => (a.status || '').toLowerCase() === historyFilter);
+    }
+    if (historySearch && historySearch.trim() !== '') {
+      const q = historySearch.toLowerCase();
+      list = list.filter(a => (
+        (a.fullname || '').toLowerCase().includes(q) ||
+        (a.service || '').toLowerCase().includes(q) ||
+        (a.artist_name || '').toLowerCase().includes(q) ||
+        String(a.id || '').includes(q)
+      ));
+    }
+    const hdir = historySortDirection === 'asc' ? 1 : -1;
+    if (historySort === 'date') list.sort((x, y) => (parseDateTime(x) - parseDateTime(y)) * hdir);
+    if (historySort === 'name') list.sort((x, y) => ((x.fullname || '').localeCompare(y.fullname || '')) * hdir);
+    return list;
+  };
 
-      const getFilteredUsers = () => {
-        let list = [...users];
-        if (usersFilter !== 'all') list = list.filter(u => (u.role || '').toLowerCase() === usersFilter);
-        if (usersSearch && usersSearch.trim() !== '') {
-          const q = usersSearch.toLowerCase();
-          list = list.filter(u => (
-            (u.fullname || '').toLowerCase().includes(q) ||
-            (u.username || '').toLowerCase().includes(q) ||
-            (u.email || '').toLowerCase().includes(q)
-          ));
-        }
-        const udir = usersSortDirection === 'asc' ? 1 : -1;
-        if (usersSort === 'name') list.sort((a, b) => ((a.fullname || '').localeCompare(b.fullname || '')) * udir);
-        if (usersSort === 'username') list.sort((a, b) => ((a.username || '').localeCompare(b.username || '')) * udir);
-        return list;
-      };
+  const getFilteredUsers = () => {
+    let list = [...users];
+    if (usersFilter !== 'all') list = list.filter(u => (u.role || '').toLowerCase() === usersFilter);
+    if (usersSearch && usersSearch.trim() !== '') {
+      const q = usersSearch.toLowerCase();
+      list = list.filter(u => (
+        (u.fullname || '').toLowerCase().includes(q) ||
+        (u.username || '').toLowerCase().includes(q) ||
+        (u.email || '').toLowerCase().includes(q)
+      ));
+    }
+    const udir = usersSortDirection === 'asc' ? 1 : -1;
+    if (usersSort === 'name') list.sort((a, b) => ((a.fullname || '').localeCompare(b.fullname || '')) * udir);
+    if (usersSort === 'username') list.sort((a, b) => ((a.username || '').localeCompare(b.username || '')) * udir);
+    return list;
+  };
 
-      const getFilteredFeedback = () => {
-        let list = [...feedback];
-        if (feedbackFilter === 'resolved') list = list.filter(f => f.resolved);
-        if (feedbackFilter === 'pending') list = list.filter(f => !f.resolved);
-        if (feedbackSearch && feedbackSearch.trim() !== '') {
-          const q = feedbackSearch.toLowerCase();
-          list = list.filter(f => (
-            (f.user || '').toLowerCase().includes(q) ||
-            (f.message || '').toLowerCase().includes(q)
-          ));
-        }
-        const fdir = feedbackSortDirection === 'asc' ? 1 : -1;
-        if (feedbackSort === 'date') list.sort((a, b) => (new Date(a.date) - new Date(b.date)) * fdir);
-        if (feedbackSort === 'rating') list.sort((a, b) => ((a.stars || 0) - (b.stars || 0)) * fdir);
-        return list;
-      };
+  const getFilteredFeedback = () => {
+    let list = [...feedback];
+    if (feedbackFilter === 'resolved') list = list.filter(f => f.resolved);
+    if (feedbackFilter === 'pending') list = list.filter(f => !f.resolved);
+    if (feedbackSearch && feedbackSearch.trim() !== '') {
+      const q = feedbackSearch.toLowerCase();
+      list = list.filter(f => (
+        (f.user || '').toLowerCase().includes(q) ||
+        (f.message || '').toLowerCase().includes(q)
+      ));
+    }
+    const fdir = feedbackSortDirection === 'asc' ? 1 : -1;
+    if (feedbackSort === 'date') list.sort((a, b) => (new Date(a.date) - new Date(b.date)) * fdir);
+    if (feedbackSort === 'rating') list.sort((a, b) => ((a.stars || 0) - (b.stars || 0)) * fdir);
+    return list;
+  };
 
-      // Select-based handlers that detect re-selection by clearing the select when opened.
-      const onSelectMouseDown = (type, key) => {
-        if (type === 'appointments') {
-          appointmentsPrevRef.current[key] =
-            key === 'filter' ? appointmentsFilter : appointmentsSort;
-        } else if (type === 'history') {
-          historyPrevRef.current[key] =
-            key === 'filter' ? historyFilter : historySort;
-        } else if (type === 'users') {
-          usersPrevRef.current[key] =
-            key === 'filter' ? usersFilter : usersSort;
-        } else if (type === 'feedback') {
-          feedbackPrevRef.current[key] =
-            key === 'filter' ? feedbackFilter : feedbackSort;
-        }
-      };
+  // Select-based handlers that detect re-selection by clearing the select when opened.
+  const onSelectMouseDown = (type, key) => {
+    if (type === 'appointments') {
+      appointmentsPrevRef.current[key] =
+        key === 'filter' ? appointmentsFilter : appointmentsSort;
+    } else if (type === 'history') {
+      historyPrevRef.current[key] =
+        key === 'filter' ? historyFilter : historySort;
+    } else if (type === 'users') {
+      usersPrevRef.current[key] =
+        key === 'filter' ? usersFilter : usersSort;
+    } else if (type === 'feedback') {
+      feedbackPrevRef.current[key] =
+        key === 'filter' ? feedbackFilter : feedbackSort;
+    }
+  };
 
 
-      const onSelectChange = (type, key, value) => {
-        if (type === 'appointments') {
-          const prev = appointmentsPrevRef.current[key];
+  const onSelectChange = (type, key, value) => {
+    if (type === 'appointments') {
+      const prev = appointmentsPrevRef.current[key];
 
-          if (key === 'filter') {
-            setAppointmentsFilter(value);
-            setAppointmentsPage(1);
-          } else {
-            setAppointmentsSort(value);
-            if (value === prev)
-              setAppointmentsSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-            setAppointmentsPage(1);
-          }
-        } else if (type === 'history') {
-          const prev = historyPrevRef.current[key];
+      if (key === 'filter') {
+        setAppointmentsFilter(value);
+        setAppointmentsPage(1);
+      } else {
+        setAppointmentsSort(value);
+        if (value === prev)
+          setAppointmentsSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+        setAppointmentsPage(1);
+      }
+    } else if (type === 'history') {
+      const prev = historyPrevRef.current[key];
 
-          if (key === 'filter') {
-            setHistoryFilter(value);
-            setHistoryPage(1);
-          } else {
-            setHistorySort(value);
-            if (value === prev)
-              setHistorySortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-            setHistoryPage(1);
-          }
-        } else if (type === 'users') {
-          const prev = usersPrevRef.current[key];
+      if (key === 'filter') {
+        setHistoryFilter(value);
+        setHistoryPage(1);
+      } else {
+        setHistorySort(value);
+        if (value === prev)
+          setHistorySortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+        setHistoryPage(1);
+      }
+    } else if (type === 'users') {
+      const prev = usersPrevRef.current[key];
 
-          if (key === 'filter') {
-            setUsersFilter(value);
-            setUsersPage(1);
-          } else {
-            setUsersSort(value);
-            if (value === prev)
-              setUsersSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-            setUsersPage(1);
-          }
-        } else if (type === 'feedback') {
-          const prev = feedbackPrevRef.current[key];
+      if (key === 'filter') {
+        setUsersFilter(value);
+        setUsersPage(1);
+      } else {
+        setUsersSort(value);
+        if (value === prev)
+          setUsersSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+        setUsersPage(1);
+      }
+    } else if (type === 'feedback') {
+      const prev = feedbackPrevRef.current[key];
 
-          if (key === 'filter') {
-            setFeedbackFilter(value);
-            setFeedbackPage(1);
-          } else {
-            setFeedbackSort(value);
-            if (value === prev)
-              setFeedbackSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-            setFeedbackPage(1);
-          }
-        }
-      };
+      if (key === 'filter') {
+        setFeedbackFilter(value);
+        setFeedbackPage(1);
+      } else {
+        setFeedbackSort(value);
+        if (value === prev)
+          setFeedbackSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+        setFeedbackPage(1);
+      }
+    }
+  };
 
-      const loadUsers = async () => {
-        setLoading(true);
-        try {
-          const params = new URLSearchParams();
-          params.append("page", usersPage);
-          params.append("per_page", usersPerPage);
+  const loadUsers = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append("page", usersPage);
+      params.append("per_page", usersPerPage);
 
-          if (usersFilter && usersFilter.toLowerCase() !== "all")
-            params.append("filter", usersFilter);
+      if (usersFilter && usersFilter.toLowerCase() !== "all")
+        params.append("filter", usersFilter);
 
-          if (usersSort)
-            params.append(
-              "sort",
-              usersSort + (usersSortDirection === "desc" ? "_desc" : "")
-            );
+      if (usersSort)
+        params.append(
+          "sort",
+          usersSort + (usersSortDirection === "desc" ? "_desc" : "")
+        );
 
-          const url = `${API_BASE_URL}/api/admin/users?${params.toString()}`;
-          const res = await fetch(url, { credentials: "include" });
-          const payload = await res.json();
+      const url = `${API_BASE_URL}/api/admin/users?${params.toString()}`;
+      const res = await fetch(url, { credentials: "include" });
+      const payload = await res.json();
 
-          setUsers(payload.data || []);
-          setUsersTotal(payload.total || 0);
-        } catch (err) {
-          console.error("Error loading users:", err);
-        } finally {
-          setLoading(false);
-        }
-      };
+      setUsers(payload.data || []);
+      setUsersTotal(payload.total || 0);
+    } catch (err) {
+      console.error("Error loading users:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const loadFeedback = async () => {
-        setLoading(true);
-        try {
-          const params = new URLSearchParams();
-          params.append('page', feedbackPage);
-          params.append('per_page', feedbackPerPage);
-          if (feedbackFilter !== 'all') params.append('status', feedbackFilter);
-          if (debouncedFeedbackSearch) params.append('q', debouncedFeedbackSearch);
-          if (feedbackSort) params.append('sort', feedbackSort + (feedbackSortDirection === 'desc' ? '_desc' : ''));
+  const loadFeedback = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append('page', feedbackPage);
+      params.append('per_page', feedbackPerPage);
+      if (feedbackFilter !== 'all') params.append('status', feedbackFilter);
+      if (debouncedFeedbackSearch) params.append('q', debouncedFeedbackSearch);
+      if (feedbackSort) params.append('sort', feedbackSort + (feedbackSortDirection === 'desc' ? '_desc' : ''));
 
-          const url = `${API_BASE_URL}/api/admin/feedback?${params.toString()}`;
-          const res = await fetch(url, { credentials: 'include' });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const payload = await res.json();
-          const data = payload.data || [];
-          setFeedback(data);
-          setFeedbackTotal(payload.total || 0);
-        } catch (error) {
-          console.error('Error loading feedback:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
+      const url = `${API_BASE_URL}/api/admin/feedback?${params.toString()}`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const payload = await res.json();
+      const data = payload.data || [];
+      setFeedback(data);
+      setFeedbackTotal(payload.total || 0);
+    } catch (error) {
+      console.error('Error loading feedback:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleResolved = async (id, resolved) => {
     setPendingFeedbackIds(prev => ({ ...prev, [id]: true }));
@@ -620,7 +613,7 @@ export default function AdminPage() {
 
         {activePanel === 'appointments' && (
           <div>
-            <h2 className='admin-titles'>Appointments</h2>
+            <h2>Appointments</h2>
             {loading ? (
               <p>Loading...</p>
             ) : (
@@ -694,7 +687,7 @@ export default function AdminPage() {
                         <td>{apt.artist_name}</td>
                         <td>{apt.appointment_date}</td>
                         <td>{apt.time}</td>
-                        <td className={`status ${apt.status.toLowerCase()}`}>
+                        <td className={`status ${apt.status.toLowerCase() || `unknown`}`}>
                           {apt.status}
                         </td>
                         <td>
@@ -722,9 +715,9 @@ export default function AdminPage() {
                           ) : apt.status === 'Approved' ? (
                             (() => {
                               try {
-                                const aptDt = new Date(`${apt.appointment_date}T${apt.time}:00`);
+                                const aptDt = parse(`${apt.appointment_date} ${apt.time}`, 'yyyy-MM-dd h:mm a', new Date());
                                 const now = new Date();
-                                if (isAdmin && aptDt <= now) {
+                                if (isAdmin && aptDt.getTime() <= now.getTime()) {
                                   return (
                                     <>
                                       <button className="action-btn approve" onClick={() => updateAppointmentStatus(apt.id, 'Completed')} disabled={!!pendingActions[apt.id]}>{pendingActions[apt.id] ? 'Processing...' : 'Mark Complete'}</button>
@@ -760,7 +753,6 @@ export default function AdminPage() {
             )}
           </div>
         )}
-
         {activePanel === 'availability' && (
           <div className="panel-container">
             <StaffAvailabilityPage />
