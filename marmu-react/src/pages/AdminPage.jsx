@@ -237,8 +237,6 @@ export default function AdminPage() {
       const params = new URLSearchParams();
       params.append("page", appointmentsPage);
       params.append("per_page", appointmentsPerPage);
-
-      // exclude history (Completed, Abandoned, Cancelled)
       params.append("exclude_history", "1");
 
       if (appointmentsFilter && appointmentsFilter.toLowerCase() !== "all") {

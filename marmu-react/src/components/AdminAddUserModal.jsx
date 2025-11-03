@@ -32,7 +32,7 @@ function AdminAddUserModal({ onClose, onUserAdded }) {
 
             if (response.ok) {
                 alert('✅ User added successfully!');
-                onUserAdded()
+                onUserAdded();
                 onClose();
             } else {
                 alert(`⚠️ ${data.error || 'Failed to add user.'}`);
@@ -83,12 +83,19 @@ function AdminAddUserModal({ onClose, onUserAdded }) {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                     />
-                    <input
-                        type="text"
+
+                    {/* Role dropdown */}
+                    <select
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
-                        placeholder="Enter role (user, Admin, tattooartist, barber)"
-                    />
+                        required
+                    >
+                        <option value="">-- Select Role --</option>
+                        <option value="user">Client</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Barber">Barber</option>
+                        <option value="TattooArtist">Tattoo Artist</option>
+                    </select>
 
                     <div className="modal-actions">
                         <button type="submit" disabled={loading}>

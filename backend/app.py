@@ -249,7 +249,7 @@ def post_feedback():
     try:
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id FROM tbl_users WHERE username=%s", (username,))
+        cursor.execute("SELECT c.id FROM tbl_clients c JOIN tbl_accounts a ON c.account_id = a.id WHERE a.username = %s ", (username,))
         result = cursor.fetchone()
         if not result:
             return jsonify({"error": "User not found"}), 404
@@ -286,15 +286,25 @@ def login():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True, buffered=True)
         cursor.execute("""
-            SELECT username, fullname, email, hash_pass, role 
-            FROM tbl_users 
-            WHERE username = %s OR email = %s
+            SELECT 
+                a.id AS account_id,
+                a.username,
+                a.email,
+                a.hash_pass,
+                a.role,
+                COALESCE(c.fullname, s.fullname, ad.fullname) AS fullname
+            FROM tbl_accounts a
+            LEFT JOIN tbl_clients c ON a.id = c.account_id
+            LEFT JOIN tbl_staff s ON a.id = s.account_id
+            LEFT JOIN tbl_admins ad ON a.id = ad.account_id
+            WHERE a.username = %s OR a.email = %s
         """, (username_or_email, username_or_email))
         user = cursor.fetchone()
 
         if not user or hash_password(password) != user["hash_pass"]:
             return jsonify({"error": "Invalid username/email or password"}), 401
 
+        session["account_id"] = user["account_id"]
         session["username"] = user["username"]
         session["fullname"] = user["fullname"]
         session["email"] = user["email"]
@@ -343,7 +353,7 @@ def change_password():
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT hash_pass FROM tbl_users WHERE username=%s", (username,))
+        cursor.execute("SELECT a.hash_pass FROM tbl_accounts a WHERE a.username = %s", (username,))
         row = cursor.fetchone()
         if not row:
             return jsonify({'success': False, 'message': 'User not found'}), 404
@@ -357,7 +367,7 @@ def change_password():
         cursor.close()
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE tbl_users SET hash_pass=%s WHERE username=%s",
+            "UPDATE tbl_accounts SET hash_pass = %s WHERE username = %s",
             (hash_password(new_password), username)
         )
         conn.commit()
@@ -416,10 +426,11 @@ def signup_verify():
         if cursor.fetchone():
             return jsonify({"error": "Username or email already exists"}), 409
 
+        role = "user"  
         cursor.execute("""
-            INSERT INTO tbl_users (fullname, username, email, hash_pass)
+            INSERT INTO tbl_accounts (username, email, hash_pass, role)
             VALUES (%s, %s, %s, %s)
-        """, (fullname, username, email, hash_password(password)))
+        """, (username, email, hash_password(password), role))
         conn.commit()
 
         del otp_storage[email]
@@ -581,13 +592,13 @@ def create_booking():
         cursor = conn.cursor()
 
         # Check if the user exists
-        cursor.execute("SELECT id FROM tbl_users WHERE username=%s", (username,))
+        cursor.execute("SELECT c.id FROM tbl_clients c JOIN tbl_accounts a ON c.account_id = a.id WHERE a.username = %s ", (username,))
         user = cursor.fetchone()
         if not user:
             return jsonify({"error": "User not found"}), 404
         
         # Check if staff exists
-        cursor.execute("SELECT fullname FROM tbl_users WHERE id=%s", (staff_id,))
+        cursor.execute("SELECT s.fullname FROM tbl_staff s WHERE s.id = %s", (staff_id,))
         artist = cursor.fetchone()
         if not artist:
             return jsonify({"error": "Artist not found"}), 404
@@ -639,11 +650,21 @@ def get_user_appointments(username):
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
+            SELECT a.id AS account_id, c.id AS client_id
+            FROM tbl_accounts a
+            JOIN tbl_clients c ON c.account_id = a.id
+            WHERE a.username = %s
+        """, (username,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        cursor.execute("""
             SELECT id, fullname, service, appointment_date, time, remarks, status
             FROM tbl_appointment
-            WHERE user_id = (SELECT id FROM tbl_users WHERE username = %s)
+            WHERE user_id = %s
             ORDER BY appointment_date DESC, time DESC
-        """, (username,))
+        """, (user["client_id"],))
         return jsonify(cursor.fetchall()), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -809,7 +830,7 @@ def admin_dashboard_data():
     cursor = conn.cursor(dictionary=True)
     # Di napapasa yug value
     # total clients - adjust WHERE clause if your users table differs
-    cursor.execute("SELECT COUNT(*) AS total_clients FROM tbl_users WHERE role = 'user'")
+    cursor.execute("SELECT COUNT(*) AS total_clients FROM tbl_clients")
     total_clients = cursor.fetchone().get('total_clients', 0)
 
     # notifications: pending appointments, new feedback (no reply)
@@ -1054,7 +1075,8 @@ def update_appointment(id):
                 a.appointment_date, 
                 a.time
             FROM tbl_appointment a 
-            JOIN tbl_users u ON a.user_id = u.id 
+            JOIN tbl_clients c ON a.user_id = c.id
+            JOIN tbl_accounts acc ON c.account_id = acc.id
             WHERE a.id = %s
             """,
             (id,),
@@ -1097,8 +1119,7 @@ def get_staff_unavailability_list():
     cursor.execute("""
         SELECT tsu.*, tu.fullname AS staff_name
         FROM tbl_staff_unavailability tsu
-        JOIN tbl_users tu ON tsu.staff_id = tu.id
-        WHERE tu.role IN ('Barber', 'TattooArtist')
+        JOIN tbl_staff s ON tsu.staff_id = s.id
     """)
 
     results = cursor.fetchall()
@@ -1125,28 +1146,40 @@ def get_users():
         params = []
 
         if filter_value and filter_value != 'all':
-            where_clauses.append("u.role = %s")
+            where_clauses.append("a.role = %s")
             params.append(filter_value)
 
         where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
 
         sort_map = {
-            'name': 'u.fullname ASC',
-            'name_desc': 'u.fullname DESC',
-            'username': 'u.username ASC',
-            'username_desc': 'u.username DESC',
-            'role': 'u.role ASC',
-            'role_desc': 'u.role DESC',
+            'name': 'fullname ASC',
+            'name_desc': 'fullname DESC',
+            'username': 'a.username ASC',
+            'username_desc': 'a.username DESC',
+            'role': 'a.role ASC',
+            'role_desc': 'a.role DESC',
         }
-        order_sql = sort_map.get(sort, sort_map['name'])
+        order_sql = sort_map.get(sort, 'fullname ASC')
 
-        count_sql = f"SELECT COUNT(*) AS total FROM tbl_users u {where_sql}"
+        # Count from tbl_accounts
+        count_sql = f"""
+            SELECT COUNT(*) AS total
+            FROM tbl_accounts a
+            LEFT JOIN tbl_clients c ON a.id = c.account_id
+            LEFT JOIN tbl_staff s ON a.id = s.account_id
+            LEFT JOIN tbl_admins ad ON a.id = ad.account_id
+            {where_sql}
+        """
         cursor.execute(count_sql, tuple(params))
         total = cursor.fetchone()['total']
 
         sql = f"""
-            SELECT u.id, u.fullname, u.username, u.email, u.role
-            FROM tbl_users u
+            SELECT a.id, a.username, a.email, a.role,
+                   COALESCE(c.fullname, s.fullname, ad.fullname) AS fullname
+            FROM tbl_accounts a
+            LEFT JOIN tbl_clients c ON a.id = c.account_id
+            LEFT JOIN tbl_staff s ON a.id = s.account_id
+            LEFT JOIN tbl_admins ad ON a.id = ad.account_id
             {where_sql}
             ORDER BY {order_sql}
             LIMIT %s OFFSET %s
@@ -1293,7 +1326,12 @@ def admin_reply_feedback(feedback_id):
 
         # Optionally send an email if checkbox is checked
         if send_email:
-            cursor.execute("SELECT email FROM tbl_users WHERE id = %s", (feedback["user_id"],))
+            cursor.execute("""
+                SELECT acc.email 
+                FROM tbl_clients c
+                JOIN tbl_accounts acc ON c.account_id = acc.id
+                WHERE c.id = %s
+            """, (feedback["user_id"],))
             user = cursor.fetchone()
             if user and user["email"]:
                 send_feedback_reply_email(user["email"], feedback["username"], reply)
@@ -1340,7 +1378,6 @@ def toggle_feedback_resolved(feedback_id):
             cursor.close()
             conn.close()
 
-            
 # =========================================
 # SERVICES
 # =========================================
@@ -1364,7 +1401,7 @@ def get_service_images():
         if not os.path.exists(folder):
             return []
         for filename in os.listdir(folder):
-            if filename.lower().endswith(".png"):  # ✅ Only .png files
+            if filename.lower().endswith(".png"):
                 name = os.path.splitext(filename)[0].replace("_", " ").replace("-", " ").title()
                 image_url = f"http://localhost:5000/assets/{service_type}_images/{filename}"
                 images.append({"name": name, "image": image_url})
