@@ -68,7 +68,8 @@
   text-align: center;
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer; /* ✅ indicates clickable */
+  cursor: pointer;
+  /* ✅ indicates clickable */
 }
 
 .gallery-card:hover {
@@ -131,6 +132,7 @@
   from {
     background-color: rgba(0, 0, 0, 0);
   }
+
   to {
     background-color: rgba(0, 0, 0, 0.85);
   }
@@ -141,6 +143,7 @@
     transform: scale(0.85);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
@@ -196,6 +199,7 @@
   padding: 40px 20px;
   background-color: var(--bg);
   margin-top: 50px;
+  margin-bottom: 200px;
 }
 
 .book-now-btn {

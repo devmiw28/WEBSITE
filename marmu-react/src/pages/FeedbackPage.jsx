@@ -162,7 +162,7 @@ export default function FeedbackPage() {
             {submitting ? 'Submitting...' : 'Submit Feedback'}
           </button>
           {hasAnyRole && hasAnyRole(['admin','barber','tattooartist']) && (
-            <p style={{ color: '#e0a', marginTop: '8px' }}>Admin/staff accounts cannot submit feedback from here.</p>
+            <p style={{ color: 'rgba(206, 2, 2, 1)', marginTop: '8px' }}>Admin/staff accounts cannot submit feedback from here.</p>
           )}
         </section>
 

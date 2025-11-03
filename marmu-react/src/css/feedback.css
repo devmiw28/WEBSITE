@@ -40,7 +40,7 @@ header h1 {
   margin-top: 300px;
   padding: 25px;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif !important;
 }
 
@@ -81,6 +81,7 @@ textarea {
   transition: background 0.3s;
   font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif !important;
 }
+
 .submit-btn:hover {
   background: #005f99;
 }
@@ -89,6 +90,7 @@ textarea {
   max-width: 700px;
   margin: 40px auto;
   padding: 20px;
+  margin-bottom: 200px;
   font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif !important;
 }
 
@@ -137,7 +139,7 @@ textarea {
 
 .admin-reply {
   background: var(--card);
-  border-left: 3px solid #007ACC;
+  border-left: 3px solid var(--gold);
   padding: 10px;
   margin-top: 10px;
   font-size: 0.95rem;

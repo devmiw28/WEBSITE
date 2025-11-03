@@ -105,7 +105,6 @@ export default function HomePage() {
       <footer>
         <h3>Marmu Barber & Tattoo Shop</h3>
 
-        {/* Placeholder icons for social media, assuming you'll use Font Awesome */}
         <div className="social-icons">
           <a href="#" aria-label="Instagram"><img src="/assets/instagram.png" alt="Instagram" /></a>
           <a href="https://www.facebook.com/tattooshackz" aria-label="Facebook"><img src="/assets/facebook.png" alt="Facebook" /></a>
