@@ -231,13 +231,15 @@ export default function AdminPage() {
       console.error('Failed to load monthly report', e);
     }
   };
-
   const loadAppointments = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       params.append("page", appointmentsPage);
       params.append("per_page", appointmentsPerPage);
+
+      // exclude history (Completed, Abandoned, Cancelled)
+      params.append("exclude_history", "1");
 
       if (appointmentsFilter && appointmentsFilter.toLowerCase() !== "all") {
         params.append("status", appointmentsFilter.toLowerCase());
@@ -268,7 +270,7 @@ export default function AdminPage() {
     }
   };
 
-   const updateAppointmentStatus = async (id, status) => {
+  const updateAppointmentStatus = async (id, status) => {
     setPendingActions(prev => ({ ...prev, [id]: true }));
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/appointments/${id}`, {
@@ -613,7 +615,7 @@ export default function AdminPage() {
 
         {activePanel === 'appointments' && (
           <div>
-            <h2>Appointments</h2>
+            <h2 className='admin-titles'>Appointments</h2>
             {loading ? (
               <p>Loading...</p>
             ) : (
@@ -630,7 +632,6 @@ export default function AdminPage() {
                       <option value="pending">Pending</option>
                       <option value="approved">Approved</option>
                       <option value="denied">Denied</option>
-                      <option value="cancelled">Cancelled</option>
                     </select>
                   </div>
                   <div className="control-group">
@@ -777,6 +778,7 @@ export default function AdminPage() {
                       <option value="all">All</option>
                       <option value="completed">Completed</option>
                       <option value="abandoned">Abandoned</option>
+                      <option value="cancelled">Cancelled</option>
                     </select>
                   </div>
                   <div className="control-group">

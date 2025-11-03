@@ -955,10 +955,10 @@ def get_appointments():
             params.append(status.capitalize())
         elif history_only == '1':
             # only history statuses
-            where_clauses.append("COALESCE(a.status, 'Pending') IN ('Completed','Abandoned','Done')")
+            where_clauses.append("COALESCE(a.status, 'Pending') IN ('Completed','Abandoned','Cancelled')")
         elif exclude_history == '1':
             # exclude history statuses
-            where_clauses.append("COALESCE(a.status, 'Pending') NOT IN ('Completed','Abandoned','Done')")
+            where_clauses.append("COALESCE(a.status, 'Pending') NOT IN ('Completed','Abandoned','Cancelled')")
 
         # ✅ Search query
         if q:

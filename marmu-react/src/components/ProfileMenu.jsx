@@ -84,7 +84,7 @@ export default function ProfileMenu({ onClose, onToggleTheme, theme }) {
                   <br />
                   <small>Status: {apt.status}</small>
                   <br />
-                  {/* Cancel button for upcoming appointments */}
+                  {/* cancel button  */}
                   {(() => {
                     try {
                       let aptDt = parse(`${apt.appointment_date} ${apt.time}`, 'yyyy-MM-dd h:mm a', new Date());
