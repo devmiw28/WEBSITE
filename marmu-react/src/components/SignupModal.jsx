@@ -44,7 +44,7 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE_URL}/api/signup/send_otp`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/signup/send_otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email })
@@ -103,7 +103,7 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/signup/verify`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/signup/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

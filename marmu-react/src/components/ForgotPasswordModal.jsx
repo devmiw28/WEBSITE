@@ -30,9 +30,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, switchToLogin }) 
     setLoading(true);
     setStatusMsg('');
     try {
-      // Use /api/api so the proxy rewrite removes only the first /api,
-      // reaching backend /api/send_otp
-      const response = await fetch(`${API_BASE_URL}/api/api/send_otp`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/send_otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -53,10 +51,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, switchToLogin }) 
 
   const resetPassword = async () => {
     const { email, otp, newPassword, confirmPassword } = formData;
-    if (!email || !otp || !newPassword || !confirmPassword) {
-      alert('Please fill in all fields.');
-      return;
-    }
+    
     // Match change password strength: >=8 chars, includes letters and numbers
     const hasLetter = /[A-Za-z]/.test(newPassword);
     const hasNumber = /\d/.test(newPassword);
@@ -70,9 +65,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, switchToLogin }) 
     }
     setLoading(true);
     try {
-      // Use /api/api so the proxy rewrite removes only the first /api,
-      // reaching backend /api/reset_password
-      const response = await fetch(`POST ${API_BASE_URL}/api/auth/change_password`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset_password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

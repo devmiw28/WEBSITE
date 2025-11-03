@@ -73,6 +73,7 @@ def create_booking():
     finally:
         conn.close()
 
+
 @bookings_bp.route("/user/<username>", methods=["GET"])
 def get_user_appointments(username):
     conn = get_connection()
@@ -89,12 +90,35 @@ def get_user_appointments(username):
             return jsonify({"error": "User not found"}), 404
 
         cursor.execute("""
-            SELECT id, fullname, service, appointment_date, time, remarks, status
+            SELECT id,
+                   fullname,
+                   service,
+                   appointment_date,
+                   time,
+                   remarks,
+                   status,
+                   artist_name
             FROM tbl_appointment
             WHERE user_id=%s
             ORDER BY appointment_date DESC, time DESC
         """, (user["client_id"],))
-        return jsonify(cursor.fetchall()), 200
+        appointments = cursor.fetchall()
+
+        # Normalize time strings to 12-hour format with AM/PM
+        for apt in appointments:
+            t = apt.get("time")
+            if t:
+                try:
+                    # handle "14:00", "2:00 PM", etc.
+                    try:
+                        parsed = datetime.strptime(t.strip(), "%H:%M")
+                    except ValueError:
+                        parsed = datetime.strptime(t.strip(), "%I:%M %p")
+                    apt["time"] = parsed.strftime("%I:%M %p")
+                except Exception:
+                    apt["time"] = t  # leave as-is if parsing fails
+
+        return jsonify(appointments), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
@@ -114,9 +138,10 @@ def cancel_appointment(appointment_id):
         if not apt:
             return jsonify({'error': 'Appointment not found'}), 404
 
-        cursor.execute("SELECT id FROM tbl_users WHERE username=%s", (username,))
+        # check account id matches appointment.user_id
+        cursor.execute("SELECT c.id AS client_id FROM tbl_accounts a JOIN tbl_clients c ON c.account_id=a.id WHERE a.username=%s", (username,))
         user_row = cursor.fetchone()
-        if not user_row or apt['user_id'] != user_row['id']:
+        if not user_row or apt['user_id'] != user_row['client_id']:
             return jsonify({'error': 'Not authorized to cancel this appointment'}), 403
 
         if apt['status'] in ('Cancelled', 'Completed', 'Abandoned', 'Done'):
@@ -135,8 +160,14 @@ def cancel_appointment(appointment_id):
 
         conn.commit()
 
+        # send cancellation email if email exists
         try:
-            cursor.execute("SELECT email, fullname FROM tbl_users WHERE id=%s", (apt['user_id'],))
+            cursor.execute("""
+                SELECT acc.email, c.fullname
+                FROM tbl_clients c
+                JOIN tbl_accounts acc ON c.account_id=acc.id
+                WHERE c.id=%s
+            """, (apt['user_id'],))
             u = cursor.fetchone()
             if u and u.get('email'):
                 send_appointment_status_email(
@@ -156,6 +187,7 @@ def cancel_appointment(appointment_id):
         return jsonify({'error': f"Error while cancelling the appointment: {str(e)}"}), 500
     finally:
         conn.close()
+
 
 @bookings_bp.route("/available_slots", methods=["GET"])
 def get_available_slots():
@@ -182,6 +214,7 @@ def get_available_slots():
         conn.close()
         return jsonify({"available_times": []})
 
+    # closed on Sundays
     if weekday == 6:
         cursor.close()
         conn.close()
@@ -189,7 +222,8 @@ def get_available_slots():
 
     start_hour = 9
     end_hour = 17 if weekday == 5 else 21
-    default_slots = [f"{h%12 or 12}:{m:02d} {'AM' if h < 12 else 'PM'}" for h in range(start_hour, end_hour) for m in [0]]
+    default_slots = [f"{h%12 or 12}:{m:02d} {'AM' if h < 12 else 'PM'}"
+                     for h in range(start_hour, end_hour) for m in [0]]
 
     cursor.execute("""
         SELECT time FROM tbl_appointment
@@ -197,6 +231,7 @@ def get_available_slots():
     """, (date, staff_id))
     booked = {row["time"] for row in cursor.fetchall()}
 
+    # normalize to 12hr strings
     unavailable_times_12hr = set([datetime.strptime(t, "%H:%M").strftime("%I:%M %p") for t in unavailable_times])
     booked_12hr = set([datetime.strptime(t, "%H:%M").strftime("%I:%M %p") for t in booked])
     all_unavailable = unavailable_times_12hr | booked_12hr

@@ -99,6 +99,68 @@ def change_password():
     finally:
         conn.close()
 
+
+@auth_bp.route('/send_otp', methods=['POST'])
+def forgot_send_otp():
+    email = request.json.get('email')
+    if not email or not email.endswith('@gmail.com'):
+        return jsonify({'success': False, 'message': 'Invalid email format'}), 400
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM tbl_accounts WHERE email=%s", (email,))
+        if not cursor.fetchone():
+            return jsonify({'success': False, 'message': 'No account found with this email'}), 404
+    finally:
+        conn.close()
+
+    otp = str(random.randint(100000, 999999))
+    otp_storage[email] = {
+        'otp': otp,
+        'expires_at': datetime.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)
+    }
+
+    try:
+        send_email_otp(email, "Your OTP for Password Reset", otp)
+        return jsonify({'success': True, 'message': 'OTP sent successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Failed to send OTP: {str(e)}'}), 500
+    
+@auth_bp.route('/reset_password', methods=['POST'])
+def reset_password():
+    data = request.json
+    email, otp, new_pass, confirm = (
+        data.get('email'),
+        data.get('otp'),
+        data.get('new_password'),
+        data.get('confirm_password'),
+    )
+
+    if not all([email, otp, new_pass, confirm]):
+        return jsonify({'success': False, 'message': 'All fields are required'}), 400
+    if new_pass != confirm:
+        return jsonify({'success': False, 'message': 'Passwords do not match'}), 400
+
+    stored = otp_storage.get(email)
+    if not stored or datetime.now() > stored['expires_at'] or otp != stored['otp']:
+        return jsonify({'success': False, 'message': 'Invalid or expired OTP'}), 400
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE tbl_accounts SET hash_pass=%s WHERE email=%s",
+            (hash_password(new_pass), email)
+        )
+        conn.commit()
+        del otp_storage[email]
+        return jsonify({'success': True, 'message': 'Password reset successful'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Database error: {str(e)}'}), 500
+    finally:
+        conn.close()
+
 @auth_bp.route("/signup/send_otp", methods=["POST"])
 def signup_send_otp():
     data = request.get_json()
@@ -136,7 +198,7 @@ def signup_verify():
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT id FROM tbl_users WHERE username=%s OR email=%s", (username, email))
+        cursor.execute("SELECT id FROM tbl_accounts WHERE username=%s OR email=%s", (username, email))
         if cursor.fetchone():
             return jsonify({"error": "Username or email already exists"}), 409
 
@@ -147,7 +209,7 @@ def signup_verify():
         """, (username, email, hash_password(password), role))
         account_id = cursor.lastrowid
 
-        cursor.execute("INSERT INTO tbl_clients (account_id, fullname) VALUES (%s, %s)", (account_id, fullname))
+        cursor.execute("INSERT INTO tbl_accounts (account_id, fullname) VALUES (%s, %s)", (account_id, fullname))
         conn.commit()
 
         del otp_storage[email]

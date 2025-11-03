@@ -691,7 +691,7 @@ export default function AdminPage() {
                         </td>
                         <td>
                           {apt.status === 'Pending' ? (
-                            isAdmin ? (
+                            isAdmin || isStaff ? (
                               <>
                                 <button
                                   className="action-btn approve"

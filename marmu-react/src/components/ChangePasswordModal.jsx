@@ -35,7 +35,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
 
     setLoading(true);
     try {
-      const resp = await fetch(`${API_BASE_URL}/api/change_password`, {
+      const resp = await fetch(`${API_BASE_URL}/api/auth/send_otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
