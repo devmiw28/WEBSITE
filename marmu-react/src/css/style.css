@@ -6,7 +6,9 @@
   margin-top: 300px;
 }
 
-.page { padding-top: 64px; }
+.page {
+  padding-top: 64px;
+}
 
 /* Hero/banner removed — homepage uses normal page flow; header is fixed via navbar.css */
 
@@ -226,8 +228,16 @@
 
 .booking-container button:hover,
 #submitBtn:hover {
-  background: #ffb74d;
+  background: goldenrod;
 }
+
+.warning {
+  color: "red";
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
 
 /* =========================================================
    FOOTER (Extended from index.css)
@@ -242,7 +252,8 @@ footer h3 {
   padding-top: 30px;
 }
 
-.footer-content, .copyright {
+.footer-content,
+.copyright {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;

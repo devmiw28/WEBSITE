@@ -57,7 +57,6 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
       if (!res.ok)
         throw new Error(data.error || `Failed to send OTP (${res.status})`);
 
-      // ✅ SweetAlert success message
       Swal.fire({
         toast: true,
         position: 'top-end',
@@ -66,6 +65,9 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
+        customClass: {
+          container: 'swal-top-layer'
+        }
       });
 
       setOtpSent(true);
@@ -116,13 +118,15 @@ export default function SignupModal({ isOpen, onClose, switchToLogin }) {
       if (!res.ok)
         throw new Error(data.error || `Signup failed (${res.status})`);
 
-      // ✅ SweetAlert success message for signup
       Swal.fire({
         position: 'center',
         icon: 'success',
         title: 'Signup Successful!',
         text: data.message,
         showConfirmButton: true,
+        customClass: {
+          container: 'swal-top-layer'
+        }
       }).then(() => {
         onClose();
         switchToLogin();

@@ -11,19 +11,13 @@ export default function BookingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [formData, setFormData] = useState({
-    service: "",
-    staff_id: "",
-    date: "",
-    time: "",
-    remarks: "",
-  });
+  const [formData, setFormData] = useState({ service: "", staff_id: "", date: "", time: "", remarks: "", });
   const [staffList, setStaffList] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [loading, setLoading] = useState(false);
   const today = new Date().toISOString().split("T")[0];
-
   const [theme, setTheme] = useState("dark-mode");
+  const isRestrictedUser = user?.role === "Admin" || user?.role === "Barber" || user?.role === "TattooArtist";
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") || "dark-mode";
@@ -69,6 +63,11 @@ export default function BookingPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isRestrictedUser) {
+      alert("Admins, barbers, and tattoo artists cannot make bookings.");
+      return;
+    }
+
     if (!formData.service || !formData.staff_id || !formData.date || !formData.time) {
       alert("Please fill out all required fields");
       return;
@@ -158,6 +157,11 @@ export default function BookingPage() {
 
       <main className="booking-container">
         <form className="booking-form" onSubmit={handleSubmit}>
+          {isRestrictedUser && (
+            <p className="warning" >
+              Booking is disabled for admin, barber, and tattoo artist accounts.
+            </p>
+          )}
           <div className="form-group">
             <label>Full Name:</label>
             <input type="text" value={user?.fullname || ""} readOnly />
@@ -170,6 +174,7 @@ export default function BookingPage() {
               value={formData.service}
               onChange={handleChange}
               required
+              disabled={isRestrictedUser}
             >
               <option value="">-- Select Service --</option>
               <option value="Haircut">Haircut</option>
@@ -185,6 +190,7 @@ export default function BookingPage() {
                 value={formData.staff_id}
                 onChange={handleChange}
                 required
+                disabled={isRestrictedUser}
               >
                 <option value="">-- Select Staff --</option>
                 {staffList.map((staff) => (
@@ -205,6 +211,7 @@ export default function BookingPage() {
               onChange={handleChange}
               min={today}
               required
+              disabled={isRestrictedUser}
             />
           </div>
 
@@ -215,14 +222,14 @@ export default function BookingPage() {
               value={formData.time}
               onChange={handleChange}
               required
-              disabled={!formData.staff_id || !formData.date}
+              disabled={isRestrictedUser || !formData.staff_id || !formData.date}
             >
               <option value="">
                 {!formData.staff_id
                   ? "-- Select Time --"
                   : availableTimes.length === 0
-                  ? "-- No Slots Available --"
-                  : "-- Select Time --"}
+                    ? "-- No Slots Available --"
+                    : "-- Select Time --"}
               </option>
               {availableTimes.map((time) => (
                 <option key={time} value={time}>
@@ -240,11 +247,12 @@ export default function BookingPage() {
               onChange={handleChange}
               rows="3"
               placeholder="Any special requests or notes..."
+              disabled={isRestrictedUser}
             />
           </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Processing..." : "Confirm Booking"}
+          <button type="submit" disabled={loading || isRestrictedUser}>
+            {isRestrictedUser ? "Booking Disabled" : loading ? "Processing..." : "Confirm Booking"}
           </button>
         </form>
       </main>

@@ -30,20 +30,16 @@ def post_feedback():
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT c.id FROM tbl_clients c JOIN tbl_accounts a ON c.account_id=a.id WHERE a.username=%s", (username,))
+        cursor.execute("SELECT id FROM tbl_accounts WHERE username=%s", (username,))
         result = cursor.fetchone()
         if not result:
             return jsonify({"error": "User not found"}), 404
 
-        user_id = result[0]
-        cursor.execute("SELECT 1 FROM tbl_feedback WHERE user_id=%s LIMIT 1", (user_id,))
-        if cursor.fetchone():
-            return jsonify({"error": "You have already submitted feedback."}), 409
-
+        account_id = result[0]
         cursor.execute("""
-            INSERT INTO tbl_feedback (user_id, username, stars, message, date_submitted)
+            INSERT INTO tbl_feedback (account_id, username, stars, message, date_submitted)
             VALUES (%s, %s, %s, %s, %s)
-        """, (user_id, username, stars, message, datetime.now()))
+        """, (account_id, username, stars, message, datetime.now()))
         conn.commit()
         return jsonify({"message": "Feedback submitted successfully!"}), 201
     except Exception as e:

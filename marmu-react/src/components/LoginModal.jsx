@@ -122,7 +122,7 @@ export default function LoginModal({ isOpen, onClose, switchToSignup, switchToFo
           {error && <div className="login-modal-error">{error}</div>}
 
           <button type="submit" className="login-modal-button" disabled={loading}>
-            {loading ? 'LOGGING IN...' : 'LOG IN'}
+            {loading ? 'LOGGING IN...' : 'LOG IN' }
           </button>
         </form>
 
