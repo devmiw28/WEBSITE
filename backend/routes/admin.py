@@ -3,6 +3,7 @@ from backend.db import get_connection
 from backend.utils.security import hash_password
 from backend.utils.email_utils import send_appointment_status_email
 from backend.utils.email_utils import send_feedback_reply_email
+import mysql.connector
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -143,6 +144,67 @@ def get_users():
     finally:
         cursor.close()
         conn.close()
+
+@admin_bp.route('/add_user', methods=['POST'])
+def add_user():
+    try:
+        data = request.get_json()
+
+        fullname = data.get('fullname')
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        role = data.get('role')
+
+        # ✅ Validate required fields
+        if not all([fullname, username, email, password, role]):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # ✅ Hash password
+        password = hash_password(password)
+
+        # ✅ Connect to database
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # ✅ Insert into tbl_accounts
+        query_account = """
+            INSERT INTO tbl_accounts (username, email, hash_pass, role)
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query_account, (username, email, password, role))
+        account_id = cursor.lastrowid  # get the new account id
+
+        # ✅ Insert into role-specific table
+        if role.lower() == "client":
+            cursor.execute(
+                "INSERT INTO tbl_clients (account_id, fullname) VALUES (%s, %s)",
+                (account_id, fullname)
+            )
+        elif role.lower() in ["barber", "tattooartist"]:
+            cursor.execute(
+                "INSERT INTO tbl_staff (account_id, fullname, specialization) VALUES (%s, %s, %s)",
+                (account_id, fullname, role)
+            )
+        elif role.lower() == "admin":
+            cursor.execute(
+                "INSERT INTO tbl_admins (account_id, fullname) VALUES (%s, %s)",
+                (account_id, fullname)
+            )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message": "User added successfully"}), 201
+
+    except mysql.connector.Error as db_err:
+        print("❌ MySQL Error:", db_err)
+        return jsonify({"error": str(db_err)}), 500
+    except Exception as e:
+        print("❌ Server Error:", e)
+        return jsonify({"error": str(e)}), 500
+
 
 @admin_bp.route("/appointments", methods=["GET"])
 def get_appointments():

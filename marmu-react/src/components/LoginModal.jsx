@@ -24,49 +24,53 @@ export default function LoginModal({ isOpen, onClose, switchToSignup, switchToFo
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+  e.preventDefault();
+  setError('');
 
-    if (!formData.username || !formData.password) {
-      setError('Please fill in both fields');
-      return;
-    }
+  if (!formData.username || !formData.password) {
+    setError('Please fill in both fields');
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(formData)
+    });
+
+    const text = await response.text();
+    let data;
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(formData)
-      });
-
-      // Try to parse JSON; if it fails, surface raw text for debugging
-      let data;
-      const text = await response.text();
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch {
-        throw new Error(`Unexpected response (${response.status}): ${text?.slice(0, 200) || 'empty body'}`);
-      }
-      if (!response.ok) throw new Error(data.error || 'Login failed');
-
-      if (data.user) {
-        login(data.user);
-        onClose();
-        navigate(data.user.role === 'Admin' ? '/admin' : '/', { replace: true });
-      } else {
-        throw new Error('Invalid response from server');
-      }
-
-      onClose();
-      navigate(data.role === 'Admin' ? '/admin' : '/', { replace: true });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(`Unexpected response (${response.status}): ${text?.slice(0, 200) || 'empty body'}`);
     }
-  };
+
+    if (!response.ok) throw new Error(data.error || 'Login failed');
+
+    if (data.user) {
+      login(data.user);
+      onClose();
+
+      // ✅ Redirect based on role
+      const role = data.user.role?.toLowerCase();
+      if (role === 'admin' || role === 'barber' || role === 'tattooartist') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    } else {
+      throw new Error('Invalid response from server');
+    }
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!isOpen) return null;
 

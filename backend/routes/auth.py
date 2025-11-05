@@ -44,17 +44,24 @@ def login():
         "role": user["role"]
     })
 
-    return jsonify({
-    "user": {
-        "account_id": user["account_id"],
-        "username": user["username"],
-        "fullname": user["fullname"],
-        "email": user["email"],
-        "role": user["role"]
-    },
-    "message": "Login successful"
-    }), 200
+    # Decide redirect target based on role
+    redirect_url = "/"
+    if user["role"].lower() in ["admin", "barber", "tattooartist", "staff"]:
+        redirect_url = "/admin"
+    else:
+        redirect_url = "/dashboard"
 
+    return jsonify({
+        "user": {
+            "account_id": user["account_id"],
+            "username": user["username"],
+            "fullname": user["fullname"],
+            "email": user["email"],
+            "role": user["role"]
+        },
+        "message": "Login successful",
+        "redirect_url": redirect_url
+    }), 200
 
 @auth_bp.route("/change_password", methods=["POST"])
 def change_password():
@@ -209,7 +216,7 @@ def signup_verify():
         """, (username, email, hash_password(password), role))
         account_id = cursor.lastrowid
 
-        cursor.execute("INSERT INTO tbl_accounts (account_id, fullname) VALUES (%s, %s)", (account_id, fullname))
+        cursor.execute("INSERT INTO tbl_clients (account_id, fullname) VALUES (%s, %s)", (account_id, fullname))
         conn.commit()
 
         del otp_storage[email]

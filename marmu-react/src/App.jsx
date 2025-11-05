@@ -63,7 +63,6 @@ function AppInner() {
     <div className="app">
       <Routes>
         <Route path="/" element={<HomePage />} />
-        {/* Keep route compatibility: navigating to /forgot-password maps to opening the modal on home */}
         <Route path="/forgot-password" element={<Navigate to="/" state={{ openForgotModal: true }} replace />} />
         <Route
           path="/book"
