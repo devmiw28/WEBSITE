@@ -43,9 +43,19 @@ def get_staff_by_service(service):
         if not role:
             return jsonify([]), 200
 
-        cursor.execute("SELECT id, fullname FROM tbl_users WHERE role=%s", (role,))
+        query = """
+            SELECT a.id, s.fullname
+            FROM tbl_accounts AS a
+            JOIN tbl_staff AS s ON s.account_id = a.id
+            WHERE a.role = %s AND s.specialization = %s
+        """
+        cursor.execute(query, (role, role))
         staff = cursor.fetchall()
+
         return jsonify(staff), 200
+    except Exception as e:
+        print("❌ Error in get_staff_by_service:", e)
+        return jsonify({"error": str(e)}), 500
     finally:
         cursor.close()
         conn.close()
