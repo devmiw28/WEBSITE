@@ -67,7 +67,6 @@ export default function FeedbackPage() {
       return;
     }
 
-    // Admin and staff accounts should not submit feedback
     if (hasAnyRole && hasAnyRole(['admin', 'barber', 'tattooartist'])) {
       alert('⚠️ Admin and staff accounts cannot submit feedback.');
       return;
@@ -125,7 +124,6 @@ export default function FeedbackPage() {
         user={user}
       />
       <main>
-        {/* Star Rating */}
         <section className="feedback-form">
           <div className="stars">
             {[1, 2, 3, 4, 5].map((star) => (
