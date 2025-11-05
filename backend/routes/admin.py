@@ -293,7 +293,7 @@ def update_appointment(appointment_id):
             SELECT a.fullname, acc.email, a.service, a.artist_name,
                    a.appointment_date, a.time
             FROM tbl_appointment a
-            JOIN tbl_clients c ON a.user_id=c.id
+            JOIN tbl_clients c ON a.account_id=c.id
             JOIN tbl_accounts acc ON c.account_id=acc.id
             WHERE a.id=%s
         """, (appointment_id,))
@@ -386,7 +386,7 @@ def admin_reply_feedback(feedback_id):
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("SELECT username, user_id FROM tbl_feedback WHERE id = %s", (feedback_id,))
+        cursor.execute("SELECT username, account_id FROM tbl_feedback WHERE id = %s", (feedback_id,))
         feedback = cursor.fetchone()
         if not feedback:
             return jsonify({"message": "Feedback not found."}), 404
@@ -404,7 +404,7 @@ def admin_reply_feedback(feedback_id):
                 FROM tbl_clients c
                 JOIN tbl_accounts acc ON c.account_id = acc.id
                 WHERE c.id = %s
-            """, (feedback["user_id"],))
+            """, (feedback["account_id"],))
             user = cursor.fetchone()
             if user and user["email"]:
                 send_feedback_reply_email(user["email"], feedback["username"], reply)
