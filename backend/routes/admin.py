@@ -293,7 +293,7 @@ def update_appointment(appointment_id):
             SELECT a.fullname, acc.email, a.service, a.artist_name,
                    a.appointment_date, a.time
             FROM tbl_appointment a
-            JOIN tbl_clients c ON a.account_id=c.id
+            JOIN tbl_clients c ON a.user_id=c.id
             JOIN tbl_accounts acc ON c.account_id=acc.id
             WHERE a.id=%s
         """, (appointment_id,))

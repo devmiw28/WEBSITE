@@ -25,7 +25,7 @@ function AdminReplyModal({ feedback, onClose, onReplySent }) {
       if (response.ok) {
         const data = await response.json();
         alert(`✅ ${data.message}`);
-        onReplySent();  // Refresh feedback list or similar action
+        onReplySent(); 
         onClose();
       } else {
         const data = await response.json();
