@@ -63,7 +63,7 @@ export default function FeedbackPage() {
   const submitFeedback = async () => {
     if (!user) {
       alert('⚠️ Please log in first to submit feedback.');
-      navigate('/login');
+      navigate('/');
       return;
     }
 

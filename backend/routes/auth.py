@@ -209,7 +209,7 @@ def signup_verify():
         if cursor.fetchone():
             return jsonify({"error": "Username or email already exists"}), 409
 
-        role = "Client"
+        role = "User"
         cursor.execute("""
             INSERT INTO tbl_accounts (username, email, hash_pass, role)
             VALUES (%s, %s, %s, %s)

@@ -418,7 +418,6 @@ def admin_reply_feedback(feedback_id):
         cursor.close()
         conn.close()
 
-
 @admin_bp.route("/feedback/<int:feedback_id>/resolve", methods=["POST"])
 def toggle_feedback_resolved(feedback_id):
     data = request.get_json()

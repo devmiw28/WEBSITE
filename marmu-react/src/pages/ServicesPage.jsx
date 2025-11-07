@@ -143,7 +143,7 @@ export default function ServicesPage() {
 
       {activeTab === "tattoo" && (
         <div className="price-list-container">
-          <h2>Tattoo Price Range</h2>
+          <h2>Tattoo Starting Price</h2>
           <ul className="price-list">
             <li className="price-list-item">
               Minimalist <span>- ₱500.00</span>
