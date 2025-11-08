@@ -173,7 +173,7 @@ def add_user():
             VALUES (%s, %s, %s, %s)
         """
         cursor.execute(query_account, (username, email, password, role))
-        account_id = cursor.lastrowid  # get the new account id
+        account_id = cursor.lastrowid  
 
         # ✅ Insert into role-specific table
         if role.lower() == "client":

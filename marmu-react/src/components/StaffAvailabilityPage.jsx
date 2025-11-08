@@ -93,7 +93,6 @@ export default function StaffAvailabilityPage() {
         alert(data.message || `Error saving availability (${res.status})`);
         setUnavailableTimes([]);
         setHasSaved(true);
-        // Optionally clear the selected date. Keeping the date selected helps review just-saved times.
         // setDate("");
         setSaving(false);
     };
@@ -118,7 +117,7 @@ export default function StaffAvailabilityPage() {
         <div className="availability-page">
             <h2>Set Staff Unavailability</h2>
 
-            {/* 🧑‍💼 Admin View */}
+            {/* Admin View */}
             {user.role === "Admin" ? (
                 <>
                     <label>Select Role:</label>
@@ -135,7 +134,7 @@ export default function StaffAvailabilityPage() {
                                 value={selectedStaff}
                                 onChange={(e) => setSelectedStaff(e.target.value)}
                             >
-                                <option value="">-- Select {role === "Barber" ? "Barber" : "Tattoo Artist"} --</option>
+                                <option value="">-- Select {role === "Barber" ? "Barber" : "TattooArtist"} --</option>
                                 {staffList.map((staff) => (
                                     <option key={staff.id} value={staff.id}>
                                         {staff.fullname}
